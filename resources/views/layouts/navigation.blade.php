@@ -12,8 +12,8 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
-                        {{ __('Home') }}
+                <x-nav-link :href="route('ics-hall')" :active="request()->routeIs('ics-hall')">
+                        {{ __('ICS Hall') }}
                     </x-nav-link>
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
@@ -26,6 +26,16 @@
                     </x-nav-link>
                     <x-nav-link :href="route('announcements')" :active="request()->routeIs('announcements')">
                         {{ __('Announcements') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('payments')" :active="request()->routeIs('payments')">
+                        {{ __('Payments') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
+                        {{ __('Letters') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('aboutus')" :active="request()->routeIs('aboutus')">
+                        {{ __('About Us') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -79,8 +89,8 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
-                {{ __('Home') }}
+            <x-responsive-nav-link :href="route('ics-hall')" :active="request()->routeIs('ics-hall')">
+                {{ __('ICS Hall') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
@@ -93,6 +103,15 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('announcements')" :active="request()->routeIs('announcements')">
                 {{ __('Announcements') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('payments')" :active="request()->routeIs('payments')">
+                {{ __('Payments') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
+                {{ __('Letters') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('aboutus')" :active="request()->routeIs('aboutus')">
+                {{ __('About Us') }}
             </x-responsive-nav-link>
         </div>
 

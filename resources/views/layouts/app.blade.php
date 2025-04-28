@@ -30,14 +30,12 @@
             <!-- Page Content -->
             <main>
                 <div>
-                    <h2 class="mt-2 text-center text-3xl font-extrabold text-gray-900">
-                        ICS ORGANIZATION
-                    </h2>
-                    <p class="mt-2 text-center text-sm text-gray-600">
-                        Navotas Polytechnic College - Integrated Computer Society
-                    </p>
+                   
                 </div>
-                {{ $slot }}
+                @yield('content')
+                @isset($slot)
+                    {{ $slot }}
+                @endisset
             </main>
         </div>
     </body>

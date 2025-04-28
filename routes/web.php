@@ -14,20 +14,36 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return view('dashboard.index');
     })->name('dashboard');
     
     Route::get('/members', function () {
-        return view('members');
+        return view('members.index');
     })->name('members');
     
     Route::get('/events', function () {
-        return view('events');
+        return view('events.index');
     })->name('events');
     
     Route::get('/announcements', function () {
-        return view('announcements');
+        return view('announcements.index');
     })->name('announcements');
+
+    Route::get('/payments', function () {
+        return view('payments.index');
+    })->name('payments');
+
+    Route::get('/letters', function () {
+        return view('letters.index');
+    })->name('letters'); 
+
+    Route::get('/ics-hall', function () {
+        return view('ics-hall.index');
+    })->name('ics-hall');
+
+    Route::get('/aboutus', function () {
+        return view('aboutus.index');
+    })->name('aboutus');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
