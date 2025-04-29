@@ -139,13 +139,11 @@
     <div class="relative z-10 flex items-center justify-center h-full text-center px-4">
         <div class="text-white max-w-4xl">
             <h1 class="font-marker text-5xl md:text-7xl animate-fadeInUp" style="animation-delay: 0.2s;">Welcome to ICS Hall!</h1>
-            <p class="mt-6 text-xl md:text-2xl animate-fadeInUp" style="animation-delay: 0.4s;">A place where you code your paths.</p>
-            <div class="mt-8 animate-fadeInUp" style="animation-delay: 0.6s;">
-            <a href="#news" class="border border-[#c21313] hover:bg-[#c21313] hover:text-white px-6 py-2 text-sm rounded-lg transition duration-300 inline-block">
-                 <span>Explore More</span>
-            </a>
-
-
+            <p class="mt-6 text-xl md:text-2xl animate-fadeInUp" style="animation-delay: 0.4s;">A place where you code your path.</p>
+            <div class="mt-8 animate-fadeInUp flex justify-center" style="animation-delay: 0.6s;">
+                <a href="#news" class="border border-[#c21313] hover:bg-[#c21313] hover:text-white px-6 py-2 text-sm rounded-lg transition duration-300">
+                    <span>Explore More</span>
+                </a>
             </div>
         </div>
     </div>
@@ -167,21 +165,19 @@
                 <h3 class="text-xl font-semibold mb-3 custom-link">{{ $news['title'] }}</h3>
                 <p class="text-gray-600 mb-4 flex-grow">{{ $news['desc'] }}</p>
                 <div class="w-full flex items-center justify-center">
-                <button type="button" class="border border-[#c21313]  hover:bg-[#c21313] hover:text-white px-6 py-2 text-sm rounded-lg transition duration-300">
-                    <span>Read More</span>
-                </button>
-
+                    <button type="button" class="border border-[#c21313] hover:bg-[#c21313] hover:text-white px-6 py-2 text-sm rounded-lg transition duration-300 mx-auto">
+                        <span>Read More</span>
+                    </button>
                 </div>
             </div>
         </div>
         @endforeach
     </div>
 
-    <div class="text-center mt-12 animate-fadeInUp" style="animation-delay: 0.8s">
-    <a href="{{ url('/announcements') }}" " class="bg-[#c21313] text-white px-6 py-2 text-sm rounded-lg transition duration-300 hover:bg-[#a11010] shadow-md">
-        See More News & Announcements 
-    </a>
-
+    <div class="text-center mt-12 animate-fadeInUp flex justify-center" style="animation-delay: 0.8s">
+        <a href="{{ url('/announcements') }}" class="bg-[#c21313] text-white px-6 py-2 text-sm rounded-lg transition duration-300 hover:bg-[#a11010] shadow-md">
+            See More News & Announcements 
+        </a>
     </div>
 </div>
 
@@ -230,10 +226,9 @@
     </div>
 <br>
     <div class="w-full flex items-center justify-center mt-12 animate-fadeInUp">
-    <a href="{{ url('/events') }}" type="button" class="bg-[#c21313] text-white px-6 py-2 text-sm rounded-lg transition duration-300 hover:bg-[#a11010] shadow-md">
-        View All Events
-    </a>
-
+        <a href="{{ url('/events') }}" class="bg-[#c21313] text-white px-6 py-2 text-sm rounded-lg transition duration-300 hover:bg-[#a11010] shadow-md mx-auto">
+            View All Events
+        </a>
     </div>
 </div>
 
