@@ -1,0 +1,1 @@
+<img src="img/ics-logo.png" alt="ics-logo" class="rounded-full" style="width: 3.5rem; height: 3.5rem; ">                  

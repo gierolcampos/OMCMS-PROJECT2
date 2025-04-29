@@ -11,7 +11,7 @@ Route::get('/', function () {
 
 // Protected routes that require authentication
 Route::middleware(['auth'])->group(function () {
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/homicse', [HomeController::class, 'index'])->name('home');
     
     Route::get('/dashboard', function () {
         return view('dashboard.index');

@@ -13,6 +13,10 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                marker: ['"Permanent Marker"', 'serif'],
+            },
+            backdropBlur: {
+                lg: '15px', // Add your custom blur level here
             },
         },
     },

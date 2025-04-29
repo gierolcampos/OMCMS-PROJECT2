@@ -1,3 +1,8 @@
+.h1 {
+    font-family: Permanently Marker, cursive;
+    font-size: 112px;
+}
+
 /* Hero Section */
 .hero {
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/hero-bg.jpg');
