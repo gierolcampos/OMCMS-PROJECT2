@@ -3,16 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use function PHPUnit\Framework\returnArgument;
 
-class HomeController extends Controller
+class AboutUsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return view('ics_hall.index');
+        //
     }
 
     /**
@@ -61,5 +60,41 @@ class HomeController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+
+    public function about_ics()
+    {
+        return view('aboutus.index');
+    }
+
+    public function vision_mission()
+    {
+        return view('aboutus.vision_mission');
+    }
+
+    public function history()
+    {
+        return view('aboutus.history');
+    }
+
+    public function logo_symbolism()
+    {
+        return view('aboutus.logo_symbolism');
+    }
+
+    public function student_leaders()
+    {
+        return view('aboutus.student_leaders');
+    }
+
+    public function developers()
+    {
+        return view('aboutus.developers');
+    }
+
+    public function contact()
+    {
+        return view('aboutus.contact');
     }
 }

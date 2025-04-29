@@ -1,0 +1,23 @@
+# Create Component File
+php artisan make:component [ComponentName]
+
+# Create Controller File w/ methods and include Model name
+php artisan make:controller [ControllerName] --resource --model=[model filename]
+
+# Create Model file with Migration File
+php artisan make:model [tablename] -m
+
+# Run Migration
+php artisan migrate
+
+# Rollback Last Migration
+php artisan migrate:rollback
+
+# Rollback All Migrations
+php artisan migrate:reset
+
+# Rollback and Re-run Migrations
+php artisan migrate:refresh
+
+# Run Specific Migration
+php artisan migrate --path=/database/migrations/[MigrationFileName].php
