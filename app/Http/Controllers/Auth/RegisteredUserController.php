@@ -31,18 +31,35 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'firstname' => ['required', 'string', 'max:255'],
+             'middlename' => ['nullable', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
-            'studentnumber' => ['required', 'string', 'max:255'],
+            'suffix' => ['nullable', 'string', 'max:255'],
+           'mobile_no' => ['required', 'regex:/^[0-9]{11}$/'],
+            'studentnumber' => ['required', 'regex:/^[0-9]{6}$/'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password_confirmation' => ['required', 'string', 'same:password'],
+            'course' => ['required', 'string', 'max:255'],
+            'major' => ['nullable', 'string', 'max:255'],
+            'year' => ['required', 'string', 'max:255'],
+            'section' => ['required', 'string', 'max:255'],
+        
         ]);
 
         $user = User::create([
             'firstname' => $request->firstname,
+            'middlename' => $request->middlename,
             'lastname' => $request->lastname,
+            'suffix'=> $request->suffix,
+            'mobile_no' => $request->mobile_no,
             'studentnumber' => $request->studentnumber,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'course' => $request->course,
+            'major' => $request->major,
+            'year' => $request->year,
+            'section' => $request->section,
+
         ]);
 
         event(new Registered($user));

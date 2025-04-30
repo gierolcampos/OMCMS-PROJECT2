@@ -16,7 +16,7 @@
             <img src="{{ asset('img/ics-logo.png') }}" alt="Logo" class="w-28 h-28 rounded-full bg-white shadow-xl border-4 border-white object-contain">
         </div>
 
-        <div class="mt-16">
+        <div class="mt-12">
             <h2 class="text-center text-3xl font-extrabold text-gray-900 tracking-tight drop-shadow">
                 ICS ORGANIZATION
             </h2>

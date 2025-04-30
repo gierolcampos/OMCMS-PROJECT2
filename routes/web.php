@@ -13,11 +13,22 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Client
+
     Route::get('/events', function () {
         return view('events.index');
     })->name('events.index');
 
+    Route::get('/announcements', function () {
+        return view('announcements.index');
+    })->name('announcements');
+
     Route::get('/omcms/ics_hall', [HomeController::class, 'index'])->name('home.index');
+
+    Route::get('/omcms/events', [HomeController::class, 'events'])->name('events.index');
+
+    Route::get('/omcms/announcements', [HomeController::class, 'announcements'])->name('announcements');
+
+    Route::get('/omcms/payments', [HomeController::class, 'payments'])->name('payments');
 
     Route::get('/omcms/about_us/about_ics', [AboutUsController::class, 'about_ics'])->name('about_us.about_ics');
 
@@ -52,13 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return view('members.index');
         })->name('members');
         
-        Route::get('/announcements', function () {
-            return view('announcements.index');
-        })->name('announcements');
 
-        Route::get('/payments', function () {
-            return view('payments.index');
-        })->name('payments');
 
         Route::get('/letters', function () {
             return view('letters.index');

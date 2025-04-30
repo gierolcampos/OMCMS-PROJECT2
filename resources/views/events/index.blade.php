@@ -5,9 +5,7 @@
     <p>Welcome to the Events page.</p>
 
     @if(Auth::user()->is_admin)
-        <a href="{{ route('events.add') }}">
-            <button>add event</button>
-        </a>
+        <button> Add Event </button>
     @endif
 
 </div>
