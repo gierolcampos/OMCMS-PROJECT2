@@ -27,6 +27,8 @@ return new class extends Migration
             $table->enum('user_role', ['officer', 'member'])->default('member');
             $table->boolean('is_admin')->default(false);
 
+            $table->string('id_school_calendar');   // 1ST SEMESTER A.Y. 2024-2025
+
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->softDeletes();

@@ -26,15 +26,6 @@
 
         <form method="POST" action="{{ route('register') }}" class="space-y-6 mt-8">
             @csrf
-             <!-- Student Number -->
-             <div>
-                <label for="studentnumber" class="block text-sm font-semibold text-gray-700">Student Number</label>
-                <input id="studentnumber" name="studentnumber" type="text" required autofocus autocomplete="studentnumber" oninput="generateEmail()" maxlength="6" pattern="[0-9]{6}" placeholder="Student Number"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
-                    value="{{ old('studentnumber') }}">
-            </div>
-
-
             <!-- First Name -->
             <div>
                 <label for="firstname" class="block text-sm font-semibold text-gray-700">First Name</label>
@@ -42,15 +33,6 @@
                     class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
                     value="{{ old('firstname') }}">
             </div>
-
-            <!-- Middle Name -->
-            <div>
-                <label for="middlename" class="block text-sm font-semibold text-gray-700">Middle Name</label>
-                <input id="middlename" name="middlename" type="text" required autofocus autocomplete="middlename" oninput="generateEmail()"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
-                    value="{{ old('middlename') }}">
-            </div>
-
             <!-- Last Name -->
             <div>
                 <label for="lastname" class="block text-sm font-semibold text-gray-700">Last Name</label>
@@ -58,70 +40,13 @@
                     class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
                     value="{{ old('lastname') }}">
             </div>
-            <!-- Suffix -->
+            <!-- Student Number -->
             <div>
-                <label for="suffix" class="block text-sm font-semibold text-gray-700">Suffix</label>
-                <input id="suffix" name="suffix" type="text" required autofocus autocomplete="suffix"
+                <label for="studentnumber" class="block text-sm font-semibold text-gray-700">Student Number</label>
+                <input id="studentnumber" name="studentnumber" type="text" required autofocus autocomplete="studentnumber" oninput="generateEmail()" maxlength="6" pattern="[0-9]{6}" placeholder="Student Number"
                     class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
-                    value="{{ old('suffix') }}">
+                    value="{{ old('studentnumber') }}">
             </div>
-            
-            <!-- Course -->
-            <div>
-                <label for="course" class="block text-sm font-semibold text-gray-700">Course</label>
-                <select id="course" name="course" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400">
-                    <option value="" disabled selected>Select your course</option>
-                    <option value="AIS">Associate in Information System</option>
-                    <option value="BSIS">Bachelor of Science in Information System</option>
-                </select>
-            </div>
-
-            <!-- Major -->
-            <div>
-                <label for="major" class="block text-sm font-semibold text-gray-700">Major</label>
-                <select id="major" name="major" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400">
-                    <option value="" disabled selected>Select your major</option>
-                    <option value="AI">N/A</option>
-                </select>
-            </div>
-
-           <!-- Year -->
-            <div>
-                <label for="year" class="block text-sm font-semibold text-gray-700">Year</label>
-                <select id="year" name="year" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400">
-                    <option value="" disabled selected>Select your year</option>
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                    <option value="3rd Year">3rd Year</option>
-                    <option value="4th Year">4th Year</option>
-                    <option value="4th Year">Alumni</option>
-                </select>
-            </div>
-
-             <!-- Section -->
-            <div>
-                <label for="section" class="block text-sm font-semibold text-gray-700">Section</label>
-                <select id="section" name="section" required
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400">
-                    <option value="" disabled selected>Select your section</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
-                </select>
-            </div>
-
-            <!-- Mobile Number -->
-            <div>
-                <label for="mobilenumber" class="block text-sm font-semibold text-gray-700">Contact Number</label>
-                <input id="mobilenumber" name="mobilenumber" type="text" required autofocus autocomplete="mobilenumber"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
-                    value="{{ old('mobilenumber') }}">
-            </div>
-
             <!-- Email Address -->
             <div>
                 <label for="email" class="block text-sm font-semibold text-gray-700">NPC Email</label>

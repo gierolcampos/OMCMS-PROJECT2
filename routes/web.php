@@ -13,6 +13,10 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Client
+    Route::get('/events', function () {
+        return view('events.index');
+    })->name('events.index');
+
     Route::get('/omcms/ics_hall', [HomeController::class, 'index'])->name('home.index');
 
     Route::get('/omcms/about_us/about_ics', [AboutUsController::class, 'about_ics'])->name('about_us.about_ics');
@@ -47,10 +51,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/members', function () {
             return view('members.index');
         })->name('members');
-        
-        Route::get('/events', function () {
-            return view('events.index');
-        })->name('events');
         
         Route::get('/announcements', function () {
             return view('announcements.index');
