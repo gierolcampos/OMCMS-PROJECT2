@@ -11,7 +11,7 @@ Route::get('/', function () {
 
 // Protected routes that require authentication
 Route::middleware(['auth'])->group(function () {
-    Route::get('/homicse', [HomeController::class, 'index'])->name('home');
+    Route::get('/ics-hall', [HomeController::class, 'index'])->name('ics-hall');
     
     Route::get('/dashboard', function () {
         return view('dashboard.index');
@@ -48,6 +48,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// About Us Routes
+Route::prefix('aboutus')->name('aboutus.')->group(function () {
+    Route::view('/about-ics', 'aboutus.about-ics')->name('about-ics');
+    Route::view('/vision-mission', 'aboutus.vision-mission')->name('vision-mission');
+    Route::view('/history', 'aboutus.history')->name('history');
+    Route::view('/logo-symbolism', 'aboutus.logo-symbolism')->name('logo-symbolism');
+    Route::view('/student-leaders', 'aboutus.student-leaders')->name('student-leaders');
+    Route::view('/developers', 'aboutus.developers')->name('developers');
+    Route::view('/contact', 'aboutus.contact')->name('contact');
 });
 
 require __DIR__.'/auth.php';

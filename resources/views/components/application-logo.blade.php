@@ -1,1 +1,1 @@
-<img src="img/ics-logo.png" alt="ics-logo" class="rounded-full" style="width: 3.5rem; height: 3.5rem; ">                  
+<img src="img/logonav.png" alt="ics-logo" style="width: 15.5rem; height: 8.5rem; ">                  

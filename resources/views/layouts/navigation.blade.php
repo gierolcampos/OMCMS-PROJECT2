@@ -9,12 +9,70 @@
         background-color: #c21313;
         color: white;
     }
+    /* Mobile view styles */
+    @media (max-width: 640px) {
+        .responsive-nav-link {
+            transition: all 0.3s ease;
+        }
+        .responsive-nav-link:hover {
+            color: #c21313 !important;
+        }
+        .responsive-nav-link.active {
+            color: white !important;
+            background-color: #c21313 !important;
+            border-color: #c21313 !important;
+        }
+        .responsive-nav-link div {
+            color: #c21313;
+        }
+        .sm\:hidden .space-y-1 a:hover {
+            color: #c21313;
+        }
+        .sm\:hidden .border-t a:hover {
+            color: #c21313;
+        }
+        .sm\:hidden .space-y-1 a[aria-current="page"] {
+            background-color: #c21313 !important;
+            color: white !important;
+        }
+    }
+    /* About Us Dropdown Styles */
+    .about-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    .about-dropdown-content {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        min-width: 200px;
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+    }
+    .about-dropdown:hover .about-dropdown-content {
+        display: block;
+    }
+    .about-dropdown-item {
+        display: block;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        color: #4b5563;
+        transition: all 0.3s ease;
+    }
+    .about-dropdown-item:hover {
+        background-color: #c21313;
+        color: white;
+    }
 </style>
 
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+    <div class="px-4 mx-auto max-w-full">
+        <div class="flex items-center justify-between h-16">
             <!-- Logo -->
             <div class="shrink-0 flex items-center">
                 <a href="{{ route('ics-hall') }}">
@@ -23,7 +81,7 @@
             </div>
 
             <!-- Navigation Links -->
-            <div class="hidden space-x-8 sm:-my-px sm:flex sm:items-center sm:justify-center flex-1">
+            <div class="hidden space-x-8 sm:flex sm:items-center sm:justify-center flex-1">
                 <x-nav-link :href="route('ics-hall')" :active="request()->routeIs('ics-hall')">
                     {{ __('ICS Hall') }}
                 </x-nav-link>
@@ -45,13 +103,24 @@
                 <x-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
                     {{ __('Letters') }}
                 </x-nav-link>
-                <x-nav-link :href="route('aboutus')" :active="request()->routeIs('aboutus')">
-                    {{ __('About Us') }}
-                </x-nav-link>
+                <div class="about-dropdown">
+                    <x-nav-link :href="route('aboutus')" :active="request()->routeIs('aboutus')" class="inline-flex items-center">
+                        {{ __('About Us') }}
+                    </x-nav-link>
+                    <div class="about-dropdown-content">
+                        <a href="{{ route('aboutus.about-ics') }}" class="about-dropdown-item">About ICS</a>
+                        <a href="{{ route('aboutus.vision-mission') }}" class="about-dropdown-item">Vision and Mission</a>
+                        <a href="{{ route('aboutus.history') }}" class="about-dropdown-item">History</a>
+                        <a href="{{ route('aboutus.logo-symbolism') }}" class="about-dropdown-item">Logo Symbolism</a>
+                        <a href="{{ route('aboutus.student-leaders') }}" class="about-dropdown-item">ICS Student Leaders</a>
+                        <a href="{{ route('aboutus.developers') }}" class="about-dropdown-item">Developers</a>
+                        <a href="{{ route('aboutus.contact') }}" class="about-dropdown-item">Contact Us</a>
+                    </div>
+                </div>
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden sm:flex sm:items-center">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="nav-hover-effect inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white focus:outline-none transition ease-in-out duration-150">
@@ -86,7 +155,7 @@
             </div>
 
             <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
+            <div class="flex items-center sm:hidden">
                 <button @click="open = ! open" class="nav-hover-effect inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
