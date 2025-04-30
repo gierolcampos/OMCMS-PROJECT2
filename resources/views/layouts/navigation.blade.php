@@ -82,27 +82,41 @@
 
             <!-- Navigation Links -->
             <div class="hidden space-x-8 sm:flex sm:items-center sm:justify-center flex-1">
+                
                 <x-nav-link :href="route('home.index')" :active="request()->routeIs('home.index')">
                     {{ __('ICS Hall') }}
                 </x-nav-link>
-                <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                    {{ __('Dashboard') }}
-                </x-nav-link>
-                <x-nav-link :href="route('members')" :active="request()->routeIs('members')">
-                    {{ __('Members') }}
-                </x-nav-link>
-                <x-nav-link :href="route('events')" :active="request()->routeIs('events')">
+
+                @if(Auth::user()->is_admin)
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                        {{ __('Dashboard') }}
+                    </x-nav-link>
+                @endif
+
+                @if(Auth::user()->is_admin)
+                    <x-nav-link :href="route('members')" :active="request()->routeIs('members')">
+                        {{ __('Members') }}
+                    </x-nav-link>
+                @endif
+
+                <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
                     {{ __('Events') }}
                 </x-nav-link>
+
                 <x-nav-link :href="route('announcements')" :active="request()->routeIs('announcements')">
                     {{ __('Announcements') }}
                 </x-nav-link>
+
                 <x-nav-link :href="route('payments')" :active="request()->routeIs('payments')">
                     {{ __('Payments') }}
                 </x-nav-link>
-                <x-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
-                    {{ __('Letters') }}
-                </x-nav-link>
+
+                @if(Auth::user()->is_admin)
+                    <x-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
+                        {{ __('Letters') }}
+                    </x-nav-link>
+                @endif
+
                 <div class="about-dropdown">
                     <x-nav-link :href="route('aboutus')" :active="request()->routeIs('aboutus')" class="inline-flex items-center">
                         {{ __('About Us') }}
@@ -178,7 +192,7 @@
             <x-responsive-nav-link :href="route('members')" :active="request()->routeIs('members')">
                 {{ __('Members') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('events')" :active="request()->routeIs('events')">
+            <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
                 {{ __('Events') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('announcements')" :active="request()->routeIs('announcements')">

@@ -26,20 +26,7 @@
 
         <form method="POST" action="{{ route('register') }}" class="space-y-6 mt-8">
             @csrf
-            <!-- First Name -->
-            <div>
-                <label for="firstname" class="block text-sm font-semibold text-gray-700">First Name</label>
-                <input id="firstname" name="firstname" type="text" required autofocus autocomplete="firstname" oninput="generateEmail()"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
-                    value="{{ old('firstname') }}">
-            </div>
-            <!-- Last Name -->
-            <div>
-                <label for="lastname" class="block text-sm font-semibold text-gray-700">Last Name</label>
-                <input id="lastname" name="lastname" type="text" required autofocus autocomplete="lastname" oninput="generateEmail()"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
-                    value="{{ old('lastname') }}">
-            </div>
+
             <!-- Student Number -->
             <div>
                 <label for="studentnumber" class="block text-sm font-semibold text-gray-700">Student Number</label>
@@ -47,6 +34,36 @@
                     class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
                     value="{{ old('studentnumber') }}">
             </div>
+            <!-- First Name -->
+            <div>
+                <label for="firstname" class="block text-sm font-semibold text-gray-700">First Name</label>
+                <input id="firstname" name="firstname" type="text" required autofocus autocomplete="firstname" oninput="generateEmail()"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
+                    value="{{ old('firstname') }}">
+            </div>
+
+            <div>
+                <label for="middlename" class="block text-sm font-semibold text-gray-700">First Name</label>
+                <input id="middlename" name="middlename" type="text" required autofocus autocomplete="middlename" oninput="generateEmail()"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
+                    value="{{ old('middlename') }}">
+            </div>
+
+            <!-- Last Name -->
+            <div>
+                <label for="lastname" class="block text-sm font-semibold text-gray-700">Last Name</label>
+                <input id="lastname" name="lastname" type="text" required autofocus autocomplete="lastname" oninput="generateEmail()"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
+                    value="{{ old('lastname') }}">
+            </div>
+
+            <div>
+                <label for="suffix" class="block text-sm font-semibold text-gray-700">Last Name</label>
+                <input id="suffix" name="suffix" type="text" required autofocus autocomplete="suffix" oninput="generateEmail()"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 transition px-4 py-2 bg-white placeholder-gray-400"
+                    value="{{ old('lastname') }}">
+            </div>
+            
             <!-- Email Address -->
             <div>
                 <label for="email" class="block text-sm font-semibold text-gray-700">NPC Email</label>
