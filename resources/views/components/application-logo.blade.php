@@ -1,1 +1,1 @@
-<img src="{{ asset('img/logonav.png') }}" alt="ics-logo" style="width: 15.5rem; height: 8.5rem;">                  
+<img src="{{ asset('img/ics-logo.png') }}" alt="ics-logo" class="rounded-full" style="width: 3.5rem; height: 3.5rem; ">                  

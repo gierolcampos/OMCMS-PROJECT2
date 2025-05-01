@@ -31,6 +31,22 @@ class HomeController extends Controller
     }   
     
 
+    public function events()
+    {
+        return view('events.index');
+    }
+
+    public function announcements()
+    {
+        return view('announcements.index');
+    }   
+
+    public function payments()
+    {
+        return view('payments.index');
+    }   
+    
+
     /**
      * Show the form for creating a new resource.
      */

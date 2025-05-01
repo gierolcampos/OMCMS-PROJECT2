@@ -184,6 +184,7 @@
             <x-responsive-nav-link :href="route('home.index')" :active="request()->routeIs('home.index')">
                 {{ __('ICS Hall') }}
             </x-responsive-nav-link>
+<<<<<<< HEAD
             
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
@@ -193,7 +194,7 @@
                 {{ __('Members') }}
             </x-responsive-nav-link>
             
-            <x-responsive-nav-link :href="route('events')" :active="request()->routeIs('events')">
+            <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
                 {{ __('Events') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('announcements')" :active="request()->routeIs('announcements')">
@@ -202,11 +203,10 @@
             <x-responsive-nav-link :href="route('payments')" :active="request()->routeIs('payments')">
                 {{ __('Payments') }}
             </x-responsive-nav-link>
-            @if(Auth::user()->is_admin)
-                <x-responsive-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
-                    {{ __('Letters') }}
-                </x-responsive-nav-link>
-            @endif
+            
+            <x-responsive-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
+                {{ __('Letters') }}
+            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('aboutus')" :active="request()->routeIs('aboutus')">
                 {{ __('About Us') }}
             </x-responsive-nav-link>
