@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\AboutUsController;
+use App\Http\Controllers\MemberController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,14 +10,32 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('home.index') : redirect()->route('login');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
-
-    // Client
-
+// Protected routes that require authentication
+Route::middleware(['auth'])->group(function () {
+    Route::get('/homicse', [HomeController::class, 'index'])->name('home');
+    
+    Route::get('/dashboard', function () {
+        return view('dashboard.index');
+    })->name('dashboard');
+    
+    // Members routes
+    Route::get('/members', [MemberController::class, 'index'])->name('members.index');
+    Route::get('/members/create', [MemberController::class, 'create'])->name('members.create');
+    Route::post('/members', [MemberController::class, 'store'])->name('members.store');
+    Route::get('/members/{member}', [MemberController::class, 'show'])->name('members.show');
+    Route::get('/members/{member}/edit', [MemberController::class, 'edit'])->name('members.edit');
+    Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
+    Route::delete('/members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+    
+    // Add routes for export and import members
+    Route::get('/members-export', [MemberController::class, 'export'])->name('members.export');
+    Route::get('/members-import', [MemberController::class, 'showImportForm'])->name('members.showImport');
+    Route::post('/members-import', [MemberController::class, 'import'])->name('members.import');
+    
     Route::get('/events', function () {
         return view('events.index');
-    })->name('events.index');
-
+    })->name('events');
+    
     Route::get('/announcements', function () {
         return view('announcements.index');
     })->name('announcements');
