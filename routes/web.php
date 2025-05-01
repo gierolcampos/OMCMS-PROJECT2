@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    return Auth::check() ? redirect()->route('home') : redirect()->route('login');
+    return Auth::check() ? redirect()->route('home.index') : redirect()->route('login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

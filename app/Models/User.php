@@ -32,6 +32,7 @@ class User extends Authenticatable
         'email',
         'password',
         'id_school_calendar',
+        'status',
     ];
 
     /**

@@ -29,12 +29,28 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Check if student number already exists
+        $existingStudent = User::where('studentnumber', $request->studentnumber)->first();
+        if ($existingStudent) {
+            return back()->withInput()->withErrors([
+                'studentnumber' => 'This student number is already registered. Please use a different student number or contact support if you believe this is an error.'
+            ]);
+        }
+
+        // Check if email already exists
+        $existingEmail = User::where('email', $request->email)->first();
+        if ($existingEmail) {
+            return back()->withInput()->withErrors([
+                'email' => 'This email is already registered. Please use a different email or contact support if you believe this is an error.'
+            ]);
+        }
+
         $request->validate([
             'firstname' => ['required', 'string', 'max:255'],
-             'middlename' => ['nullable', 'string', 'max:255'],
+            'middlename' => ['nullable', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
             'suffix' => ['nullable', 'string', 'max:255'],
-           'mobile_no' => ['required', 'regex:/^[0-9]{11}$/'],
+            'mobile_no' => ['required', 'regex:/^[0-9]{11}$/'],
             'studentnumber' => ['required', 'regex:/^[0-9]{6}$/'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -43,7 +59,6 @@ class RegisteredUserController extends Controller
             'major' => ['nullable', 'string', 'max:255'],
             'year' => ['required', 'string', 'max:255'],
             'section' => ['required', 'string', 'max:255'],
-        
         ]);
 
         $user = User::create([
@@ -59,13 +74,11 @@ class RegisteredUserController extends Controller
             'major' => $request->major,
             'year' => $request->year,
             'section' => $request->section,
-
+            'id_school_calendar' => '1ST SEMESTER A.Y. 2024-2025',
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('login')->with('success', 'Thank you for registering in OMCMS - ICS Portal. Your account will be under validation to ensure authenticity and eligibility. We will email you once you can login. Thank you!');
     }
 }

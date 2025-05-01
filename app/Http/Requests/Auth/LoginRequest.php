@@ -49,6 +49,21 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        if ($user->status === 'pending') {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account is under validation. Please wait for an email update.',
+            ]);
+        }
+
+        if ($user->status === 'rejected') {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been rejected. Please contact support for more information.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
