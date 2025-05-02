@@ -11,7 +11,7 @@
                         <p class="text-gray-600 mt-1">Enter your payment details</p>
                     </div>
                     <div>
-                        <a href="{{ route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <a href="{{ route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-[#c21313] bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-arrow-left mr-2"></i> Back to Payments
                         </a>
                     </div>
@@ -47,7 +47,7 @@
                         <!-- Payment Method -->
                         <div>
                             <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-1">Payment Method <span class="text-red-500">*</span></label>
-                            <select id="payment_method" name="payment_method" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required onchange="handlePaymentMethodChange(this.value)">
+                            <select id="payment_method" name="payment_method" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm" required onchange="handlePaymentMethodChange(this.value)">
                                 <option value="">Select Payment Method</option>
                                 <option value="CASH" {{ old('payment_method') == 'CASH' ? 'selected' : '' }}>CASH</option>
                                 <option value="GCASH" {{ old('payment_method') == 'GCASH' ? 'selected' : '' }}>GCASH</option>
@@ -99,7 +99,7 @@
                         <!-- Purpose -->
                         <div>
                             <label for="purpose" class="block text-sm font-medium text-gray-700 mb-1">Purpose <span class="text-red-500">*</span></label>
-                            <select id="purpose" name="purpose" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            <select id="purpose" name="purpose" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm" required>
                                 <option value="">Select Purpose</option>
                                 <option value="Membership Fee" {{ old('purpose') == 'Membership Fee' ? 'selected' : '' }}>Membership Fee</option>
                                 <option value="Event Fees" {{ old('purpose') == 'Event Fees' ? 'selected' : '' }}>Event Fees</option>
@@ -152,7 +152,7 @@
                                 <label for="receipt_control_number" class="block text-sm font-medium text-gray-700 mb-1">
                                     Receipt Control Number <span class="text-red-500">*</span>
                                 </label>
-                                <input type="number" id="receipt_control_number" name="receipt_control_number" value="{{ old('receipt_control_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter receipt control number">
+                                <input type="number" id="receipt_control_number" name="receipt_control_number" value="{{ old('receipt_control_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm" placeholder="Enter receipt control number">
                                 @error('receipt_control_number')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -164,13 +164,15 @@
                                     Proof of Payment <span class="text-red-500">*</span>
                                 </label>
                                 <input type="file" id="cash_proof_of_payment" name="cash_proof_of_payment"
-                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm"
                                     accept=".jpg,.jpeg">
                                 <p class="mt-1 text-xs text-gray-500">Only JPG files are accepted</p>
                                 @error('cash_proof_of_payment')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
+
+
                         </div>
                     </div>
 
@@ -202,28 +204,14 @@
                                 @enderror
                             </div>
 
-                            <!-- GCash Amount -->
-                            <div>
-                                <label for="gcash_amount" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Amount Paid (₱) <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative rounded-lg shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">₱</span>
-                                    </div>
-                                    <input type="number" step="0.01" min="0" id="gcash_amount" name="gcash_amount" value="{{ old('gcash_amount') }}" class="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="0.00">
-                                </div>
-                                @error('gcash_amount')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+
 
                             <!-- Reference Number -->
                             <div>
                                 <label for="reference_number" class="block text-sm font-medium text-gray-700 mb-1">
                                     Reference Number <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" id="reference_number" name="reference_number" value="{{ old('reference_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter GCash reference number">
+                                <input type="text" id="reference_number" name="reference_number" value="{{ old('reference_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm" placeholder="Enter GCash reference number">
                                 @error('reference_number')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -235,21 +223,23 @@
                                     Proof of Payment <span class="text-red-500">*</span>
                                 </label>
                                 <input type="file" id="gcash_proof_of_payment" name="gcash_proof_of_payment"
-                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm"
                                     accept=".jpg,.jpeg">
                                 <p class="mt-1 text-xs text-gray-500">Only JPG files are accepted</p>
                                 @error('gcash_proof_of_payment')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
+
+
                         </div>
                     </div>
 
                     <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                        <a href="{{ route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <a href="{{ route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-[#c21313] bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-times mr-2"></i> Cancel
                         </a>
-                        <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition transform hover:scale-105">
+                        <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c21313] transition transform hover:scale-105">
                             <i class="fas fa-save mr-2"></i> Submit Payment
                         </button>
                     </div>
@@ -267,7 +257,6 @@
         const gcashFieldsContainer = document.getElementById('gcash-fields');
         const cashFieldsContainer = document.getElementById('cash-fields');
         const totalPriceInput = document.getElementById('total_price');
-        const gcashAmountInput = document.getElementById('gcash_amount');
         const receiptControlNumberInput = document.getElementById('receipt_control_number');
 
         // Function to toggle payment method fields
@@ -288,7 +277,7 @@
                 }
 
                 // Make GCash fields required
-                const gcashFieldIds = ['gcash_name', 'gcash_num', 'gcash_amount', 'reference_number', 'gcash_proof_of_payment'];
+                const gcashFieldIds = ['gcash_name', 'gcash_num', 'reference_number', 'gcash_proof_of_payment'];
                 gcashFieldIds.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     if (field) {
@@ -336,7 +325,7 @@
                 }
 
                 // Remove required from GCash fields
-                const gcashFieldIds = ['gcash_name', 'gcash_num', 'gcash_amount', 'reference_number', 'gcash_proof_of_payment'];
+                const gcashFieldIds = ['gcash_name', 'gcash_num', 'reference_number', 'gcash_proof_of_payment'];
                 gcashFieldIds.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     if (field) {
@@ -348,19 +337,7 @@
             }
         }
 
-        // Function to validate GCash amount
-        function validateGcashAmount() {
-            if (paymentMethod.value === 'GCASH') {
-                const totalPrice = parseFloat(totalPriceInput.value) || 0;
-                const gcashAmount = parseFloat(gcashAmountInput.value) || 0;
 
-                if (gcashAmount < totalPrice) {
-                    gcashAmountInput.setCustomValidity('Amount paid must be greater than or equal to the payment amount');
-                } else {
-                    gcashAmountInput.setCustomValidity('');
-                }
-            }
-        }
 
         // Initial check
         setTimeout(function() {
@@ -405,6 +382,7 @@
                     if (cashProofOfPayment) cashProofOfPayment.focus();
                     return;
                 }
+
             } else if (paymentMethod.value === 'GCASH') {
                 // Validate GCASH fields
                 const gcashName = document.getElementById('gcash_name');
@@ -425,26 +403,10 @@
                     return;
                 }
 
-                if (!gcashAmountInput || !gcashAmountInput.value) {
-                    e.preventDefault();
-                    alert('Please enter the GCash Amount');
-                    if (gcashAmountInput) gcashAmountInput.focus();
-                    return;
-                }
-
                 if (!referenceNumber || !referenceNumber.value.trim()) {
                     e.preventDefault();
                     alert('Please enter the GCash Reference Number');
                     if (referenceNumber) referenceNumber.focus();
-                    return;
-                }
-
-                const totalPrice = parseFloat(totalPriceInput.value) || 0;
-                const gcashAmount = parseFloat(gcashAmountInput.value) || 0;
-                if (gcashAmount < totalPrice) {
-                    e.preventDefault();
-                    alert('GCash amount must be greater than or equal to the total price');
-                    if (gcashAmountInput) gcashAmountInput.focus();
                     return;
                 }
 
@@ -456,6 +418,10 @@
                     if (gcashProofOfPayment) gcashProofOfPayment.focus();
                     return;
                 }
+
+
+
+
             }
         });
     });

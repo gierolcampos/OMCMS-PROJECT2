@@ -12,11 +12,11 @@
                     </div>
                     <div class="mt-4 md:mt-0">
                         @if(Auth::user()->is_admin)
-                        <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-[#c21313] bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-arrow-left mr-2"></i> Back to Payments
                         </a>
                         @else
-                        <a href="{{ route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <a href="{{ route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-[#c21313] bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-arrow-left mr-2"></i> Back to Payments
                         </a>
                         @endif
@@ -36,7 +36,9 @@
                                 <p class="text-sm font-medium text-gray-500">Payment Status</p>
                                 <p class="mt-1">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                        {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                        {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                                           ($payment->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                           'bg-red-100 text-red-800') }}">
                                         {{ $payment->payment_status }}
                                     </span>
                                 </p>
@@ -59,8 +61,18 @@
                                 <p class="mt-1 text-sm text-gray-900">₱{{ number_format($payment->total_price, 2) }}</p>
                             </div>
                             <div>
+                                <p class="text-sm font-medium text-gray-500">Purpose</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $payment->purpose ?? 'N/A' }}</p>
+                            </div>
+                            <div>
                                 <p class="text-sm font-medium text-gray-500">Member</p>
-                                <p class="mt-1 text-sm text-gray-900">{{ optional($payment->user)->name ?? 'Guest' }}</p>
+                                <p class="mt-1 text-sm text-gray-900">
+                                    @if($payment->user)
+                                        {{ $payment->user->firstname }} {{ $payment->user->lastname }}
+                                    @else
+                                        Guest
+                                    @endif
+                                </p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Officer in-charge</p>
@@ -93,17 +105,10 @@
                                 <p class="mt-1 text-sm text-gray-900">{{ $payment->gcash_num }}</p>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Amount Paid</p>
-                                <p class="mt-1 text-sm text-gray-900">₱{{ number_format($payment->gcash_amount, 2) }}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Change</p>
-                                <p class="mt-1 text-sm text-gray-900">₱{{ number_format($payment->change_amount, 2) }}</p>
-                            </div>
-                            <div>
                                 <p class="text-sm font-medium text-gray-500">Reference Number</p>
                                 <p class="mt-1 text-sm text-gray-900">{{ $payment->reference_number }}</p>
                             </div>
+
                             @if($payment->gcash_proof_path)
                             <div class="md:col-span-2 mt-4">
                                 <p class="text-sm font-medium text-gray-500 mb-2">Proof of Payment</p>
@@ -111,7 +116,7 @@
                                     <img src="{{ asset($payment->gcash_proof_path) }}" alt="GCash Payment Proof" class="w-full max-w-md h-auto">
                                 </div>
                                 <div class="mt-2">
-                                    <a href="{{ asset($payment->gcash_proof_path) }}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-900">
+                                    <a href="{{ asset($payment->gcash_proof_path) }}" target="_blank" class="text-sm text-[#c21313] hover:text-red-800">
                                         <i class="fas fa-external-link-alt mr-1"></i> View Full Image
                                     </a>
                                 </div>
@@ -126,18 +131,14 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Cash Payment Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p class="text-sm font-medium text-gray-500">Payment Status</p>
-                                <p class="mt-1">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                        {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                        {{ $payment->payment_status }}
-                                    </span>
-                                </p>
+                                <p class="text-sm font-medium text-gray-500">Officer in Charge</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $payment->officer_in_charge ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Receipt Control Number</p>
                                 <p class="mt-1 text-sm text-gray-900">{{ $payment->receipt_control_number ?? 'N/A' }}</p>
                             </div>
+
                             @if($payment->cash_proof_path)
                             <div class="md:col-span-2 mt-4">
                                 <p class="text-sm font-medium text-gray-500 mb-2">Proof of Payment</p>
@@ -145,7 +146,7 @@
                                     <img src="{{ asset($payment->cash_proof_path) }}" alt="Cash Payment Proof" class="w-full max-w-md h-auto">
                                 </div>
                                 <div class="mt-2">
-                                    <a href="{{ asset($payment->cash_proof_path) }}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-900">
+                                    <a href="{{ asset($payment->cash_proof_path) }}" target="_blank" class="text-sm text-[#c21313] hover:text-red-800">
                                         <i class="fas fa-external-link-alt mr-1"></i> View Full Image
                                     </a>
                                 </div>
@@ -168,7 +169,7 @@
                         </form>
                         <form action="{{ route('admin.payments.reject', $payment->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reject this payment?');">
                             @csrf
-                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 transition">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 transition">
                                 <i class="fas fa-times-circle mr-2"></i> Reject
                             </button>
                         </form>

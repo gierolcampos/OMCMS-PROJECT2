@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Payment;
 use App\Models\Order;
 use App\Models\NonIcsMember;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use Illuminate\Routing\Controller as BaseController;
 use App\Models\User;
 
-class PaymentController extends BaseController
+class PaymentController extends Controller
 {
     /**
      * Display a listing of the payments.
@@ -54,6 +50,30 @@ class PaymentController extends BaseController
 
             $payments = $query->orderBy('created_at', 'desc')->paginate(10);
 
+            // Get non-ICS members data directly from the non_ics_members table
+            $nonIcsQuery = NonIcsMember::query();
+
+            // Apply search filter for non-ICS members
+            if (request('search')) {
+                $nonIcsQuery->where(function($q) {
+                    $q->where('id', 'like', '%' . request('search') . '%')
+                      ->orWhere('email', 'like', '%' . request('search') . '%')
+                      ->orWhere('fullname', 'like', '%' . request('search') . '%');
+                });
+            }
+
+            // Apply payment method filter for non-ICS members
+            if (request('payment_method')) {
+                $nonIcsQuery->where('method', request('payment_method'));
+            }
+
+            // Apply status filter for non-ICS members
+            if (request('status')) {
+                $nonIcsQuery->where('payment_status', request('status'));
+            }
+
+            $nonIcsMembers = $nonIcsQuery->orderBy('created_at', 'desc')->paginate(10);
+
             // Calculate statistics
             $statsQuery = Order::query();
 
@@ -66,8 +86,18 @@ class PaymentController extends BaseController
             $pendingPayments = $statsQuery->clone()->where('payment_status', 'Pending')->sum('total_price');
             $rejectedPayments = $statsQuery->clone()->where('payment_status', 'Rejected')->sum('total_price');
 
+            // Add non-ICS members statistics
+            $totalPayments += NonIcsMember::where('payment_status', 'Paid')->sum('total_price');
+            $thisMonthPayments += NonIcsMember::where('payment_status', 'Paid')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_price');
+            $pendingPayments += NonIcsMember::where('payment_status', 'Pending')->sum('total_price');
+            $rejectedPayments += NonIcsMember::where('payment_status', 'Failed')->orWhere('payment_status', 'Rejected')->sum('total_price');
+
             return view('payments.index', compact(
                 'payments',
+                'nonIcsMembers',
                 'totalPayments',
                 'thisMonthPayments',
                 'pendingPayments',
@@ -162,6 +192,10 @@ class PaymentController extends BaseController
         }
 
         try {
+            // Check if this is a non-ICS payment submission
+            $isNonIcsPayment = $request->has('non_ics_payment') && $request->non_ics_payment == 1;
+            \Log::info('Payment submission type:', ['is_non_ics_payment' => $isNonIcsPayment]);
+
             // Process payment data
 
             // Simplify validation rules
@@ -190,21 +224,23 @@ class PaymentController extends BaseController
             if ($request->payer_type === 'ics_member') {
                 $rules['user_email'] = 'required|email|exists:users,email';
             } else if ($request->payer_type === 'non_ics_member') {
+                // For non-ICS members, user_email should not be required
+                $rules['user_email'] = 'nullable'; // Make it nullable instead of required
+
                 // Basic Non-ICS member fields
                 $rules['non_ics_email'] = 'required|email';
                 $rules['non_ics_fullname'] = 'required|string|max:100';
                 $rules['course_year_section'] = 'required|string|max:50';
                 $rules['non_ics_mobile'] = 'nullable|string|max:20';
 
+                \Log::info('Using non-ICS member validation rules', [
+                    'has_user_email' => $request->has('user_email'),
+                    'user_email_value' => $request->input('user_email')
+                ]);
+
                 // Additional Non-ICS member fields
                 $rules['student_id'] = 'nullable|string|max:50';
-                $rules['department'] = 'nullable|string|max:100';
-                $rules['address'] = 'nullable|string|max:500';
-                $rules['notes'] = 'nullable|string|max:1000';
                 $rules['payment_status'] = 'nullable|string|in:None,Pending,Paid';
-                $rules['membership_type'] = 'nullable|string|max:50';
-                $rules['membership_expiry'] = 'nullable|date';
-                $rules['alternative_email'] = 'nullable|email';
             }
 
 
@@ -234,51 +270,88 @@ class PaymentController extends BaseController
             if ($validated['payer_type'] === 'ics_member') {
                 // For ICS members, get the user from the database
                 $user = User::where('email', $validated['user_email'])->firstOrFail();
-            } else {
+                \Log::info('ICS Member selected:', ['user_id' => $user->id, 'email' => $user->email]);
+            } else if ($validated['payer_type'] === 'non_ics_member') {
                 // For non-ICS members, find or create a record in the non_ics_members table
                 try {
+                    \Log::info('Non-ICS Member selected, checking database');
+
                     // Check if the non-ICS member already exists
                     $existingMember = NonIcsMember::where('email', $validated['non_ics_email'])->first();
 
                     if ($existingMember) {
                         $nonIcsMember = $existingMember;
+                        \Log::info('Existing Non-ICS Member found:', ['id' => $nonIcsMember->id, 'email' => $nonIcsMember->email]);
 
                         // Update the existing member with the new data
                         $nonIcsMember->fullname = $validated['non_ics_fullname'];
                         $nonIcsMember->course_year_section = $validated['course_year_section'];
                         $nonIcsMember->mobile_no = $validated['non_ics_mobile'] ?? null;
+                        $nonIcsMember->purpose = $validated['purpose'] ?? null;
+                        $nonIcsMember->total_price = $validated['total_price'] ?? null;
+                        $nonIcsMember->method = $validated['payment_method'];
+                        $nonIcsMember->description = $validated['description'] ?? null;
+                        $nonIcsMember->placed_on = now();
+
+                        // Update payment method specific fields
+                        if ($validated['payment_method'] === 'CASH') {
+                            $nonIcsMember->receipt_control_number = $validated['receipt_control_number'] ?? null;
+                            // Cash proof path will be set later after file upload
+                        } else if ($validated['payment_method'] === 'GCASH') {
+                            $nonIcsMember->gcash_name = $validated['gcash_name'] ?? null;
+                            $nonIcsMember->gcash_num = $validated['gcash_num'] ?? null;
+                            $nonIcsMember->reference_number = $validated['reference_number'] ?? null;
+                            // GCash proof path will be set later after file upload
+                        }
 
                         // Update additional fields if they exist in the request
                         if (isset($validated['student_id'])) $nonIcsMember->student_id = $validated['student_id'];
-                        if (isset($validated['department'])) $nonIcsMember->department = $validated['department'];
-                        if (isset($validated['address'])) $nonIcsMember->address = $validated['address'];
-                        if (isset($validated['notes'])) $nonIcsMember->notes = $validated['notes'];
                         if (isset($validated['payment_status'])) $nonIcsMember->payment_status = $validated['payment_status'];
-                        if (isset($validated['membership_type'])) $nonIcsMember->membership_type = $validated['membership_type'];
-                        if (isset($validated['membership_expiry'])) $nonIcsMember->membership_expiry = $validated['membership_expiry'];
-                        if (isset($validated['alternative_email'])) $nonIcsMember->alternative_email = $validated['alternative_email'];
 
                         $nonIcsMember->save();
+                        \Log::info('Existing Non-ICS Member updated');
                     } else {
-                        // Use the create method to ensure proper model creation
-                        $nonIcsMember = NonIcsMember::create([
+                        \Log::info('Creating new Non-ICS Member record');
+                        // Prepare data for NonIcsMember creation
+                        $nonIcsMemberData = [
                             'email' => $validated['non_ics_email'],
                             'fullname' => $validated['non_ics_fullname'],
                             'course_year_section' => $validated['course_year_section'],
                             'mobile_no' => $validated['non_ics_mobile'] ?? null,
                             'student_id' => $validated['student_id'] ?? null,
-                            'department' => $validated['department'] ?? null,
-                            'address' => $validated['address'] ?? null,
-                            'notes' => $validated['notes'] ?? null,
                             'payment_status' => $validated['payment_status'] ?? 'None',
-                            'membership_type' => $validated['membership_type'] ?? null,
-                            'membership_expiry' => $validated['membership_expiry'] ?? null,
-                            'alternative_email' => $validated['alternative_email'] ?? null
-                        ]);
+                            'purpose' => $validated['purpose'] ?? null,
+                            'total_price' => $validated['total_price'] ?? null,
+                            'method' => $validated['payment_method'],
+                            'description' => $validated['description'] ?? null,
+                            'placed_on' => now()
+                        ];
+
+                        // Add payment method specific fields
+                        if ($validated['payment_method'] === 'CASH') {
+                            $nonIcsMemberData['receipt_control_number'] = $validated['receipt_control_number'] ?? null;
+                            // Cash proof path will be set later after file upload
+                        } else if ($validated['payment_method'] === 'GCASH') {
+                            $nonIcsMemberData['gcash_name'] = $validated['gcash_name'] ?? null;
+                            $nonIcsMemberData['gcash_num'] = $validated['gcash_num'] ?? null;
+                            $nonIcsMemberData['reference_number'] = $validated['reference_number'] ?? null;
+                            // GCash proof path will be set later after file upload
+                        }
+
+                        // Use the create method to ensure proper model creation
+                        $nonIcsMember = NonIcsMember::create($nonIcsMemberData);
+                        \Log::info('New Non-ICS Member created:', ['id' => $nonIcsMember->id, 'email' => $nonIcsMember->email]);
                     }
                 } catch (\Exception $e) {
+                    \Log::error('Error processing Non-ICS Member:', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'data' => $validated
+                    ]);
                     throw $e;
                 }
+            } else {
+                throw new \Exception('Invalid payer type: ' . $validated['payer_type']);
             }
 
             // GCash amount validation removed
@@ -291,12 +364,32 @@ class PaymentController extends BaseController
                 $gcashProofFile = $request->file('gcash_proof_of_payment');
                 $gcashProofPath = 'proofs/gcash_' . time() . '_' . $gcashProofFile->getClientOriginalName();
                 $gcashProofFile->move(public_path('proofs'), $gcashProofPath);
+
+                // Update the NonIcsMember record with the proof path if it's a non-ICS member
+                if ($validated['payer_type'] === 'non_ics_member' && $nonIcsMember) {
+                    $nonIcsMember->gcash_proof_path = $gcashProofPath;
+                    $nonIcsMember->save();
+                    \Log::info('Updated NonIcsMember with GCash proof path', [
+                        'id' => $nonIcsMember->id,
+                        'gcash_proof_path' => $gcashProofPath
+                    ]);
+                }
             }
 
             if ($request->hasFile('cash_proof_of_payment') && $validated['payment_method'] === 'CASH') {
                 $cashProofFile = $request->file('cash_proof_of_payment');
                 $cashProofPath = 'proofs/cash_' . time() . '_' . $cashProofFile->getClientOriginalName();
                 $cashProofFile->move(public_path('proofs'), $cashProofPath);
+
+                // Update the NonIcsMember record with the proof path if it's a non-ICS member
+                if ($validated['payer_type'] === 'non_ics_member' && $nonIcsMember) {
+                    $nonIcsMember->cash_proof_path = $cashProofPath;
+                    $nonIcsMember->save();
+                    \Log::info('Updated NonIcsMember with Cash proof path', [
+                        'id' => $nonIcsMember->id,
+                        'cash_proof_path' => $cashProofPath
+                    ]);
+                }
             }
 
             // Create the payment record
@@ -325,7 +418,14 @@ class PaymentController extends BaseController
                     $orderData['user_id'] = $user->id;
                     $orderData['is_non_ics_member'] = false;
                     $orderData['non_ics_member_id'] = null; // Explicitly set to null
-                } else {
+                    $orderData['email'] = $user->email; // Set email from user
+
+                    \Log::info('Creating payment for ICS Member:', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'name' => $user->firstname . ' ' . $user->lastname
+                    ]);
+                } else if ($validated['payer_type'] === 'non_ics_member') {
                     // For non-ICS members, ensure we have a valid non_ics_member_id
                     if (!$nonIcsMember || !$nonIcsMember->id) {
                         throw new \Exception('Failed to create or find Non-ICS member record');
@@ -336,29 +436,130 @@ class PaymentController extends BaseController
                     $orderData['email'] = $nonIcsMember->email;
                     $orderData['course_year_section'] = $nonIcsMember->course_year_section;
                     $orderData['is_non_ics_member'] = true;
+
+                    \Log::info('Creating payment for Non-ICS Member:', [
+                        'non_ics_member_id' => $nonIcsMember->id,
+                        'email' => $nonIcsMember->email,
+                        'fullname' => $nonIcsMember->fullname,
+                        'course_year_section' => $nonIcsMember->course_year_section,
+                        'mobile_no' => $nonIcsMember->mobile_no,
+                        'student_id' => $nonIcsMember->student_id,
+                        'payment_status' => $nonIcsMember->payment_status
+                    ]);
+                } else {
+                    throw new \Exception('Invalid payer type: ' . $validated['payer_type']);
                 }
             } catch (\Exception $e) {
                 throw $e;
             }
 
             try {
-                // Create the order using the create method
-                $order = Order::create($orderData);
+                // Check if this is a non-ICS payment submission
+                if ($isNonIcsPayment && $validated['payer_type'] === 'non_ics_member' && $nonIcsMember) {
+                    \Log::info('Processing as Non-ICS payment - updating NonIcsMember record directly', [
+                        'non_ics_member_id' => $nonIcsMember->id,
+                        'email' => $nonIcsMember->email
+                    ]);
+
+                    // Update the NonIcsMember record with payment details
+                    $nonIcsMember->payment_status = $validated['payment_status'];
+                    $nonIcsMember->purpose = $validated['purpose'];
+                    $nonIcsMember->total_price = $validated['total_price'];
+
+                    // Payment method specific fields
+                    if ($validated['payment_method'] === 'CASH') {
+                        $nonIcsMember->receipt_control_number = $validated['receipt_control_number'] ?? null;
+                        $nonIcsMember->cash_proof_path = $cashProofPath;
+                    } else if ($validated['payment_method'] === 'GCASH') {
+                        $nonIcsMember->gcash_name = $validated['gcash_name'] ?? null;
+                        $nonIcsMember->gcash_num = $validated['gcash_num'] ?? null;
+                        $nonIcsMember->reference_number = $validated['reference_number'] ?? null;
+                        $nonIcsMember->gcash_proof_path = $gcashProofPath;
+                    }
+
+                    $nonIcsMember->save();
+
+                    \Log::info('NonIcsMember record updated successfully', [
+                        'id' => $nonIcsMember->id,
+                        'payment_status' => $nonIcsMember->payment_status,
+                        'total_price' => $nonIcsMember->total_price
+                    ]);
+                }
+
+                // Only create an order if this is NOT a non-ICS payment
+                if (!($isNonIcsPayment && $validated['payer_type'] === 'non_ics_member')) {
+                    // Log the order data before creation
+                    \Log::info('Order Data Before Creation:', $orderData);
+
+                    // Create the order using the create method
+                    $order = Order::create($orderData);
+
+                    // Log the created order
+                    \Log::info('Order Created:', ['id' => $order->id, 'data' => $order->toArray()]);
+                } else {
+                    \Log::info('Skipping Order creation for Non-ICS member payment');
+                    $order = null; // Set to null since we're not creating an order
+                }
 
                 // Double-check that the relationship is properly established for non-ICS members
-                if ($validated['payer_type'] === 'non_ics_member' && $nonIcsMember) {
+                // Only if an order was created and it's for a non-ICS member
+                if ($order && $validated['payer_type'] === 'non_ics_member' && $nonIcsMember) {
                     // Ensure the non_ics_member_id is set correctly
                     if ($order->non_ics_member_id != $nonIcsMember->id) {
+                        \Log::warning('Order created with incorrect non_ics_member_id, fixing...', [
+                            'order_id' => $order->id,
+                            'current_non_ics_member_id' => $order->non_ics_member_id,
+                            'expected_non_ics_member_id' => $nonIcsMember->id
+                        ]);
+
                         $order->non_ics_member_id = $nonIcsMember->id;
                         $order->is_non_ics_member = true;
                         $order->save();
+
+                        \Log::info('Order Updated After Creation:', [
+                            'id' => $order->id,
+                            'non_ics_member_id' => $order->non_ics_member_id,
+                            'is_non_ics_member' => $order->is_non_ics_member
+                        ]);
+                    } else {
+                        \Log::info('Order correctly linked to Non-ICS Member:', [
+                            'order_id' => $order->id,
+                            'non_ics_member_id' => $order->non_ics_member_id,
+                            'non_ics_member_email' => $nonIcsMember->email
+                        ]);
+                    }
+
+                    // Verify the relationship works
+                    $relatedNonIcsMember = $order->nonIcsMember;
+                    if ($relatedNonIcsMember) {
+                        \Log::info('Relationship verification successful:', [
+                            'order_id' => $order->id,
+                            'related_non_ics_member_id' => $relatedNonIcsMember->id,
+                            'related_non_ics_member_email' => $relatedNonIcsMember->email
+                        ]);
+                    } else {
+                        \Log::warning('Relationship verification failed - nonIcsMember relationship returned null', [
+                            'order_id' => $order->id,
+                            'non_ics_member_id' => $order->non_ics_member_id
+                        ]);
                     }
                 }
 
+                // Prepare success message based on payment type
+                $successMessage = $isNonIcsPayment && $validated['payer_type'] === 'non_ics_member'
+                    ? 'Non-ICS member payment recorded successfully.'
+                    : 'Payment recorded successfully.';
+
                 // Redirect to payments index
                 return redirect()->route('admin.payments.index')
-                    ->with('success', 'Payment recorded successfully.');
+                    ->with('success', $successMessage);
             } catch (\Exception $e) {
+                \Log::error('Payment Creation Failed:', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'data' => $orderData ?? []
+                ]);
+
                 return redirect()->back()
                     ->with('error', 'Failed to record payment: ' . $e->getMessage())
                     ->withInput();
@@ -380,7 +581,7 @@ class PaymentController extends BaseController
 
         // Allow admins to view any payment
         // For regular members, only allow them to view their own payments
-        if (!$user->isAdmin() && $payment->user_id !== $user->id) {
+        if (!$user->is_admin && $payment->user_id !== $user->id) {
             abort(403, 'Unauthorized.');
         }
 
@@ -396,7 +597,7 @@ class PaymentController extends BaseController
         $user = Auth::user();
 
         // Only admins can edit any payment
-        if (!$user->isAdmin()) {
+        if (!$user->is_admin) {
             abort(403, 'Unauthorized.');
         }
 
@@ -413,7 +614,7 @@ class PaymentController extends BaseController
             $user = Auth::user();
 
             // Only admins can update any payment
-            if (!$user->isAdmin()) {
+            if (!$user->is_admin) {
                 abort(403, 'Unauthorized.');
             }
 
@@ -425,7 +626,7 @@ class PaymentController extends BaseController
                 // GCASH specific fields
                 'gcash_name' => 'required_if:payment_method,GCASH|string|nullable',
                 'gcash_num' => 'required_if:payment_method,GCASH|string|nullable',
-                'gcash_amount' => 'required_if:payment_method,GCASH|numeric|min:0|nullable',
+
                 'reference_number' => 'required_if:payment_method,GCASH|string|nullable',
                 // CASH specific fields
                 'officer_in_charge' => 'required_if:payment_method,CASH|string|nullable',
@@ -436,11 +637,7 @@ class PaymentController extends BaseController
                 'receipt_control_number.integer' => 'The receipt control number must be an integer.',
             ]);
 
-            // Calculate change amount for GCash payments
-            $changeAmount = 0;
-            if ($request->payment_method === 'GCASH' && isset($validated['gcash_amount'], $validated['total_price'])) {
-                $changeAmount = $validated['gcash_amount'] - $validated['total_price'];
-            }
+
 
             $payment->update([
                 'method' => $validated['payment_method'],
@@ -449,8 +646,6 @@ class PaymentController extends BaseController
                 // GCash details
                 'gcash_name' => $validated['gcash_name'] ?? null,
                 'gcash_num' => $validated['gcash_num'] ?? null,
-                'gcash_amount' => $validated['gcash_amount'] ?? null,
-                'change_amount' => $changeAmount,
                 'reference_number' => $validated['reference_number'] ?? null,
                 // Cash details
                 'officer_in_charge' => $validated['officer_in_charge'] ?? null,
@@ -478,7 +673,7 @@ class PaymentController extends BaseController
             $user = Auth::user();
 
             // Only admins can delete payments
-            if (!$user->isAdmin()) {
+            if (!$user->is_admin) {
                 abort(403, 'Unauthorized.');
             }
 
@@ -503,7 +698,7 @@ class PaymentController extends BaseController
             $user = Auth::user();
 
             // Only admins can approve payments
-            if (!$user->isAdmin()) {
+            if (!$user->is_admin) {
                 abort(403, 'Unauthorized.');
             }
 
@@ -514,7 +709,7 @@ class PaymentController extends BaseController
 
             $payment->update([
                 'payment_status' => 'Paid',
-                'officer_in_charge' => Auth::user()->name
+                'officer_in_charge' => $user->firstname . ' ' . $user->lastname
             ]);
 
             return redirect()->route('admin.payments.index')
@@ -536,7 +731,7 @@ class PaymentController extends BaseController
             $user = Auth::user();
 
             // Only admins can reject payments
-            if (!$user->isAdmin()) {
+            if (!$user->is_admin) {
                 abort(403, 'Unauthorized.');
             }
 
@@ -547,7 +742,7 @@ class PaymentController extends BaseController
 
             $payment->update([
                 'payment_status' => 'Rejected',
-                'officer_in_charge' => Auth::user()->name
+                'officer_in_charge' => $user->firstname . ' ' . $user->lastname
             ]);
 
             return redirect()->route('admin.payments.index')
@@ -556,6 +751,94 @@ class PaymentController extends BaseController
             \Log::error('Payment rejection failed: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Failed to reject payment. Please try again.');
+        }
+    }
+
+    /**
+     * Approve a pending non-ICS member payment.
+     */
+    public function approveNonIcs($id)
+    {
+        try {
+            $nonIcsMember = NonIcsMember::findOrFail($id);
+            $user = Auth::user();
+
+            // Only admins can approve payments
+            if (!$user->is_admin) {
+                abort(403, 'Unauthorized.');
+            }
+
+            if ($nonIcsMember->payment_status !== 'Pending') {
+                return redirect()->back()
+                    ->with('error', 'Only pending payments can be approved.');
+            }
+
+            $nonIcsMember->update([
+                'payment_status' => 'Paid',
+                'officer_in_charge' => $user->firstname . ' ' . $user->lastname
+            ]);
+
+            return redirect()->route('admin.payments.index')
+                ->with('success', 'Non-ICS member payment approved successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Non-ICS member payment approval failed: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to approve payment. Please try again.');
+        }
+    }
+
+    /**
+     * Reject a pending non-ICS member payment.
+     */
+    public function rejectNonIcs($id)
+    {
+        try {
+            $nonIcsMember = NonIcsMember::findOrFail($id);
+            $user = Auth::user();
+
+            // Only admins can reject payments
+            if (!$user->is_admin) {
+                abort(403, 'Unauthorized.');
+            }
+
+            if ($nonIcsMember->payment_status !== 'Pending') {
+                return redirect()->back()
+                    ->with('error', 'Only pending payments can be rejected.');
+            }
+
+            $nonIcsMember->update([
+                'payment_status' => 'Rejected',
+                'officer_in_charge' => $user->firstname . ' ' . $user->lastname
+            ]);
+
+            return redirect()->route('admin.payments.index')
+                ->with('success', 'Non-ICS member payment rejected successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Non-ICS member payment rejection failed: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to reject payment. Please try again.');
+        }
+    }
+
+    /**
+     * Show non-ICS member payment details.
+     */
+    public function showNonIcs($id)
+    {
+        try {
+            $nonIcsMember = NonIcsMember::findOrFail($id);
+            $user = Auth::user();
+
+            // Only admins can view non-ICS member payment details
+            if (!$user->is_admin) {
+                abort(403, 'Unauthorized.');
+            }
+
+            return view('payments.show-non-ics', compact('nonIcsMember'));
+        } catch (\Exception $e) {
+            \Log::error('Failed to show non-ICS member payment: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to show payment details. Please try again.');
         }
     }
 
@@ -585,15 +868,20 @@ class PaymentController extends BaseController
         // Get paginated results
         $payments = $query->paginate(10);
 
-        // Calculate statistics
-        $statsQuery = Order::where('user_id', $user->id);
+        // Calculate statistics - using separate queries to avoid query builder issues
+        $totalPayments = Order::where('user_id', $user->id)
+            ->where('payment_status', 'Paid')
+            ->sum('total_price');
 
-        $totalPayments = $statsQuery->where('payment_status', 'Paid')->sum('total_price');
-        $thisMonthPayments = $statsQuery->where('payment_status', 'Paid')
+        $thisMonthPayments = Order::where('user_id', $user->id)
+            ->where('payment_status', 'Paid')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('total_price');
-        $pendingPayments = $statsQuery->where('payment_status', 'Pending')->sum('total_price');
+
+        $pendingPayments = Order::where('user_id', $user->id)
+            ->where('payment_status', 'Pending')
+            ->sum('total_price');
 
         return view('payments.member', compact('payments', 'totalPayments', 'thisMonthPayments', 'pendingPayments'));
     }
@@ -644,7 +932,7 @@ class PaymentController extends BaseController
                 // GCASH specific fields
                 'gcash_name' => 'required_if:payment_method,GCASH|string|nullable',
                 'gcash_num' => 'required_if:payment_method,GCASH|string|nullable',
-                'gcash_amount' => 'required_if:payment_method,GCASH|numeric|min:0|nullable',
+
                 'reference_number' => 'required_if:payment_method,GCASH|string|nullable',
                 'gcash_proof_of_payment' => 'required_if:payment_method,GCASH|file|mimes:jpg,jpeg|max:2048|nullable',
                 // CASH specific fields
@@ -662,14 +950,7 @@ class PaymentController extends BaseController
                 'cash_proof_of_payment.mimes' => 'The proof of payment must be a JPG file.',
             ]);
 
-            // Validate that GCash amount is sufficient
-            if ($request->payment_method === 'GCASH' && isset($validated['gcash_amount'], $validated['total_price'])) {
-                if ($validated['gcash_amount'] < $validated['total_price']) {
-                    return redirect()->back()
-                        ->with('error', 'GCash amount must be greater than or equal to the total price.')
-                        ->withInput();
-                }
-            }
+
 
             // Handle file uploads
             $gcashProofPath = null;
@@ -688,7 +969,7 @@ class PaymentController extends BaseController
             }
 
             // Create the payment record
-            $order = Order::create([
+            $payment = Order::create([
                 'user_id' => $user->id,
                 'method' => $validated['payment_method'],
                 'total_price' => $validated['total_price'],
@@ -708,7 +989,7 @@ class PaymentController extends BaseController
             ]);
 
             return redirect()->route('client.payments.index')
-                ->with('success', 'Payment submitted successfully. It is pending approval from an administrator.');
+                ->with('success', 'Payment #' . $payment->id . ' submitted successfully. It is pending approval from an administrator.');
 
         } catch (\Exception $e) {
             \Log::error('Member payment submission failed: ' . $e->getMessage());

@@ -6,7 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Symfony\Component\VarDumper\Cloner\Stub;
 
 class User extends Authenticatable
 {
@@ -31,8 +30,16 @@ class User extends Authenticatable
         'mobile_no',
         'email',
         'password',
-        'id_school_calendar',
+        'student_id',
+        'course_year_section',
+        'membership_type',
+        'membership_expiry',
+        'alternative_email',
+        'department',
+        'address',
+        'notes',
         'status',
+        'user_role',
     ];
 
     /**
@@ -66,6 +73,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'membership_expiry' => 'date',
+            'status' => 'string',
+            'user_role' => 'string',
         ];
     }
 
@@ -76,6 +86,26 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->is_admin == 1;
+        return $this->user_role === 'admin';
+    }
+
+    /**
+     * Check if the user is active.
+     *
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Get the user's full name.
+     *
+     * @return string
+     */
+    public function getNameAttribute(): string
+    {
+        return trim($this->firstname . ' ' . ($this->middlename ? $this->middlename . ' ' : '') . $this->lastname . ($this->suffix ? ' ' . $this->suffix : ''));
     }
 }

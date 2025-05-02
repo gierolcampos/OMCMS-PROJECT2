@@ -159,7 +159,7 @@
             ['img' => 'news2.jpg', 'title' => 'ICS and EEC\'s "Digital Detox" event, a major success!', 'desc' => 'Lorem ipsum dolor sit amet, consectetur. Quisquam, quos.'],
             ['img' => 'news3.jpg', 'title' => 'ICS joins NPC Intramurals', 'desc' => 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos. Lorem ipsum dolor.']
         ] as $index => $news)
-        <div class="news-card animate-fadeInUp" style="animation-delay: {{ 0.2 + ($index * 0.2) }}s">
+        <div class="news-card animate-fadeInUp" style="animation-delay: {{ 0.2 + $index * 0.2 }}s">
             <img src="{{ asset('img/' . $news['img']) }}" alt="{{ $news['title'] }}" class="news-image">
             <div class="p-6 flex flex-col h-full">
                 <h3 class="text-xl font-semibold mb-3 custom-link">{{ $news['title'] }}</h3>
@@ -176,7 +176,7 @@
 
     <div class="text-center mt-12 animate-fadeInUp flex justify-center" style="animation-delay: 0.8s">
         <a href="{{ url('/announcements') }}" class="bg-[#c21313] text-white px-6 py-2 text-sm rounded-lg transition duration-300 hover:bg-[#a11010] shadow-md">
-            See More News & Announcements 
+            See More News & Announcements
         </a>
     </div>
 </div>
@@ -226,7 +226,7 @@
     </div>
 <br>
     <div class="w-full flex items-center justify-center mt-12 animate-fadeInUp">
-        <a href="{{ url('/events') }}" class="bg-[#c21313] text-white px-6 py-2 text-sm rounded-lg transition duration-300 hover:bg-[#a11010] shadow-md mx-auto">
+        <a href="{{ url('omcms/events') }}" class="bg-[#c21313] text-white px-6 py-2 text-sm rounded-lg transition duration-300 hover:bg-[#a11010] shadow-md mx-auto">
             View All Events
         </a>
     </div>

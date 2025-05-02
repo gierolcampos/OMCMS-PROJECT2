@@ -79,7 +79,7 @@
                         <p class="text-gray-600 mt-1">Manage and track all member payments</p>
                     </div>
                     <div class="flex flex-wrap mt-4 md:mt-0 gap-3">
-                        <a href="{{ route('admin.payments.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition">
+                        <a href="{{ route('admin.payments.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 transition">
                             <i class="fas fa-plus mr-2"></i> Record Payment
                         </a>
                     </div>
@@ -131,7 +131,7 @@
                             </select>
                         </div>
                         <div class="md:col-span-3 flex items-center gap-4">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 transition">
                                 <i class="fas fa-filter mr-2"></i> Apply Filters
                             </button>
                             <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
@@ -181,7 +181,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             <div class="flex items-center">
                                                 <div>
-                                                    <div class="font-medium text-gray-900">{{ $payment->user->name }}</div>
+                                                    <div class="font-medium text-gray-900">{{ $payment->user->firstname }} {{ $payment->user->lastname }}</div>
                                                     <div class="text-gray-500">{{ $payment->user->email }}</div>
                                                 </div>
                                             </div>
@@ -207,7 +207,7 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end space-x-2">
-                                                <a href="{{ route('admin.payments.show', $payment->id) }}" class="text-indigo-600 hover:text-indigo-900" title="View Details">
+                                                <a href="{{ route('admin.payments.show', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 @if($payment->payment_status === 'Pending')
@@ -219,7 +219,7 @@
                                                     </form>
                                                     <form method="POST" action="{{ route('admin.payments.reject', $payment->id) }}" class="inline">
                                                         @csrf
-                                                        <button type="submit" class="text-red-600 hover:text-red-900" title="Reject Payment">
+                                                        <button type="submit" class="text-[#c21313] hover:text-red-800" title="Reject Payment">
                                                             <i class="fas fa-times"></i>
                                                         </button>
                                                     </form>
@@ -269,66 +269,64 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @php $hasNonIcsMembers = false; @endphp
-                            @forelse($payments as $payment)
-                                @if($payment->is_non_ics_member && $payment->nonIcsMember)
-                                    @php $hasNonIcsMembers = true; @endphp
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            #{{ $payment->id }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <div class="flex items-center">
-                                                <div>
-                                                    <div class="font-medium text-gray-900">{{ $payment->nonIcsMember->fullname }}</div>
-                                                    <div class="text-gray-500">{{ $payment->nonIcsMember->email }}</div>
-                                                </div>
+                            @forelse($nonIcsMembers as $member)
+                                @php $hasNonIcsMembers = true; @endphp
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        #{{ $member->id }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <div class="flex items-center">
+                                            <div>
+                                                <div class="font-medium text-gray-900">{{ $member->fullname }}</div>
+                                                <div class="text-gray-500">{{ $member->email }}</div>
                                             </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $payment->nonIcsMember->course_year_section }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            ₱{{ number_format($payment->total_price, 2) }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                {{ $payment->method === 'CASH' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800' }}">
-                                                {{ $payment->method }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ \Carbon\Carbon::parse($payment->placed_on)->format('M d, Y h:i A') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
-                                                   ($payment->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                                {{ $payment->payment_status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div class="flex justify-end space-x-2">
-                                                <a href="{{ route('admin.payments.show', $payment->id) }}" class="text-indigo-600 hover:text-indigo-900" title="View Details">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                @if($payment->payment_status === 'Pending')
-                                                    <form method="POST" action="{{ route('admin.payments.approve', $payment->id) }}" class="inline">
-                                                        @csrf
-                                                        <button type="submit" class="text-green-600 hover:text-green-900" title="Approve Payment">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                    </form>
-                                                    <form method="POST" action="{{ route('admin.payments.reject', $payment->id) }}" class="inline">
-                                                        @csrf
-                                                        <button type="submit" class="text-red-600 hover:text-red-900" title="Reject Payment">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $member->course_year_section }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        ₱{{ number_format($member->total_price, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {{ $member->method === 'CASH' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800' }}">
+                                            {{ $member->method }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $member->placed_on ? \Carbon\Carbon::parse($member->placed_on)->format('M d, Y h:i A') : 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {{ $member->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                                               ($member->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                            {{ $member->payment_status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2">
+                                            <a href="{{ route('admin.payments.show-non-ics', $member->id) }}" class="text-[#c21313] hover:text-red-800" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($member->payment_status === 'Pending')
+                                                <form method="POST" action="{{ route('admin.payments.approve-non-ics', $member->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-green-600 hover:text-green-900" title="Approve Payment">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ route('admin.payments.reject-non-ics', $member->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-[#c21313] hover:text-red-800" title="Reject Payment">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
                             @empty
                                 @php $hasNonIcsMembers = false; @endphp
                             @endforelse
@@ -359,6 +357,10 @@
                         document.getElementById('table-ics-members').classList.add('hidden');
                         document.getElementById('table-non-ics-members').classList.add('hidden');
 
+                        // Hide all pagination
+                        document.getElementById('pagination-ics-members').classList.add('hidden');
+                        document.getElementById('pagination-non-ics-members').classList.add('hidden');
+
                         // Remove active class from all tabs
                         document.getElementById('tab-ics-members').classList.remove('border-indigo-500', 'text-indigo-600');
                         document.getElementById('tab-ics-members').classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
@@ -369,10 +371,12 @@
                         // Show selected table and activate tab
                         if (tabName === 'ics-members') {
                             document.getElementById('table-ics-members').classList.remove('hidden');
+                            document.getElementById('pagination-ics-members').classList.remove('hidden');
                             document.getElementById('tab-ics-members').classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
                             document.getElementById('tab-ics-members').classList.add('border-indigo-500', 'text-indigo-600');
                         } else if (tabName === 'non-ics-members') {
                             document.getElementById('table-non-ics-members').classList.remove('hidden');
+                            document.getElementById('pagination-non-ics-members').classList.remove('hidden');
                             document.getElementById('tab-non-ics-members').classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
                             document.getElementById('tab-non-ics-members').classList.add('border-indigo-500', 'text-indigo-600');
                         }
@@ -381,7 +385,12 @@
 
                 <!-- Pagination -->
                 <div class="mt-6">
-                    {{ $payments->links() }}
+                    <div id="pagination-ics-members">
+                        {{ $payments->links() }}
+                    </div>
+                    <div id="pagination-non-ics-members" class="hidden">
+                        {{ $nonIcsMembers->links() }}
+                    </div>
                 </div>
             </div>
         </div>

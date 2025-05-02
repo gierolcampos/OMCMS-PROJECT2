@@ -3,9 +3,9 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AboutUsController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\NonIcsMemberController;
-// GcashController removed
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\MemberController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,13 +13,16 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('home.index') : redirect()->route('login');
 });
 
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Client
 
-    Route::get('/events', function () {
-        return view('events.index');
-    })->name('events.index');
+    // Events routes
+    Route::get('/events', [App\Http\Controllers\EventController::class, 'index'])->name('events.index');
+    Route::get('/events/calendar', [App\Http\Controllers\EventController::class, 'calendar'])->name('events.calendar');
+    Route::get('/events/export/ical', [App\Http\Controllers\EventController::class, 'exportIcal'])->name('events.export.ical');
+    Route::resource('events', App\Http\Controllers\EventController::class)->except(['index']);
 
     Route::get('/announcements', function () {
         return view('announcements.index');
@@ -50,8 +53,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/aboutus', function () { return view('aboutus.index');
     })->name('aboutus');
 
-    // Client Payment Routes
-    Route::prefix('omcms/payments')->middleware(['auth', 'verified'])->group(function () {
+     // Client Payment Routes
+     Route::prefix('omcms/payments')->middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [PaymentController::class, 'clientIndex'])->name('client.payments.index');
         Route::get('/create', [PaymentController::class, 'memberCreate'])->name('client.payments.create');
         Route::post('/', [PaymentController::class, 'memberStore'])->name('client.payments.store');
@@ -60,60 +63,75 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{id}', [PaymentController::class, 'memberUpdate'])->name('client.payments.update');
     });
 
-    // Client GCash Routes removed
-
-
-
-
-    // Admin side
-    Route::prefix('admin')->middleware('is_admin')->group(function () {
-        // Route::get('/', function () {
-        //     return view('admin.dashboard');
-        // });
-
-        Route::get('/home', [HomeController::class, 'index'])->name('home');
-
-        Route::get('/dashboard', function () {
-            return view('dashboard.index');
-        })->name('dashboard');
-
-        Route::get('/members', function () {
-            return view('members.index');
-        })->name('members');
-
-        Route::get('/letters', function () {
-            return view('letters.index');
-        })->name('letters');
-
-        // Admin Payment Routes
-        Route::prefix('payments')->group(function () {
-            Route::get('/', [PaymentController::class, 'index'])->name('admin.payments.index');
-            Route::get('/create', [PaymentController::class, 'create'])->name('admin.payments.create');
-            Route::post('/', [PaymentController::class, 'store'])->name('admin.payments.store');
-            Route::get('/{id}', [PaymentController::class, 'show'])->name('admin.payments.show');
-            Route::get('/{id}/edit', [PaymentController::class, 'edit'])->name('admin.payments.edit');
-            Route::put('/{id}', [PaymentController::class, 'update'])->name('admin.payments.update');
-            Route::delete('/{id}', [PaymentController::class, 'destroy'])->name('admin.payments.destroy');
-            Route::post('/{id}/approve', [PaymentController::class, 'approve'])->name('admin.payments.approve');
-            Route::post('/{id}/reject', [PaymentController::class, 'reject'])->name('admin.payments.reject');
-        });
-
-        // Admin GCash Routes removed
-
-        // Admin Non-ICS Members Routes
-        Route::prefix('non-ics-members')->group(function () {
-            Route::get('/', [NonIcsMemberController::class, 'index'])->name('admin.non-ics-members.index');
-            Route::get('/create', [NonIcsMemberController::class, 'create'])->name('admin.non-ics-members.create');
-            Route::post('/', [NonIcsMemberController::class, 'store'])->name('admin.non-ics-members.store');
-            Route::get('/{id}', [NonIcsMemberController::class, 'show'])->name('admin.non-ics-members.show');
-            Route::get('/{id}/edit', [NonIcsMemberController::class, 'edit'])->name('admin.non-ics-members.edit');
-            Route::put('/{id}', [NonIcsMemberController::class, 'update'])->name('admin.non-ics-members.update');
-            Route::delete('/{id}', [NonIcsMemberController::class, 'destroy'])->name('admin.non-ics-members.destroy');
-        });
-    });
-
 });
 
+
+ // Admin side
+ Route::prefix('admin')->middleware('is_admin')->group(function () {
+    // Route::get('/', function () {
+    //     return view('admin.dashboard');
+    // });
+
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+    Route::get('/dashboard', function () {
+        return view('dashboard.index');
+    })->name('dashboard');
+
+     // Members routes
+    Route::get('/members', [MemberController::class, 'index'])->name('members.index');
+    Route::get('/members/create', [MemberController::class, 'create'])->name('members.create');
+    Route::post('/members', [MemberController::class, 'store'])->name('members.store');
+    Route::get('/members/{member}', [MemberController::class, 'show'])->name('members.show');
+    Route::get('/members/{member}/edit', [MemberController::class, 'edit'])->name('members.edit');
+    Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
+    Route::delete('/members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+    Route::patch('/members/{member}/status', [MemberController::class, 'updateStatus'])->name('members.updateStatus');
+
+    // Add routes for export and import members
+    Route::get('/members-export', [MemberController::class, 'export'])->name('members.export');
+    Route::get('/members-import', [MemberController::class, 'showImportForm'])->name('members.showImport');
+    Route::post('/members-import', [MemberController::class, 'import'])->name('members.import');
+
+    Route::get('/admin-members', [MemberController::class, 'index'])->name('admin.members.index');
+
+     // Letters routes
+    Route::get('/letters', function () {
+        return view('letters.index');
+    })->name('letters');
+
+    // Admin Payment Routes
+    Route::prefix('payments')->group(function () {
+        Route::get('/', [PaymentController::class, 'index'])->name('admin.payments.index');
+        Route::get('/create', [PaymentController::class, 'create'])->name('admin.payments.create');
+        Route::post('/', [PaymentController::class, 'store'])->name('admin.payments.store');
+
+        // Non-ICS Member Payment Routes - must be defined before the generic routes
+        Route::get('/non-ics/{id}', [PaymentController::class, 'showNonIcs'])->name('admin.payments.show-non-ics');
+        Route::post('/non-ics/{id}/approve', [PaymentController::class, 'approveNonIcs'])->name('admin.payments.approve-non-ics');
+        Route::post('/non-ics/{id}/reject', [PaymentController::class, 'rejectNonIcs'])->name('admin.payments.reject-non-ics');
+
+        // Regular payment routes
+        Route::get('/{id}', [PaymentController::class, 'show'])->name('admin.payments.show');
+        Route::get('/{id}/edit', [PaymentController::class, 'edit'])->name('admin.payments.edit');
+        Route::put('/{id}', [PaymentController::class, 'update'])->name('admin.payments.update');
+        Route::delete('/{id}', [PaymentController::class, 'destroy'])->name('admin.payments.destroy');
+        Route::post('/{id}/approve', [PaymentController::class, 'approve'])->name('admin.payments.approve');
+        Route::post('/{id}/reject', [PaymentController::class, 'reject'])->name('admin.payments.reject');
+    });
+
+
+    // Admin Non-ICS Members Routes Payment section
+    Route::prefix('non-ics-members')->group(function () {
+        Route::get('/', [NonIcsMemberController::class, 'index'])->name('admin.non-ics-members.index');
+        Route::get('/create', [NonIcsMemberController::class, 'create'])->name('admin.non-ics-members.create');
+        Route::post('/', [NonIcsMemberController::class, 'store'])->name('admin.non-ics-members.store');
+        Route::get('/{id}', [NonIcsMemberController::class, 'show'])->name('admin.non-ics-members.show');
+        Route::get('/{id}/edit', [NonIcsMemberController::class, 'edit'])->name('admin.non-ics-members.edit');
+        Route::put('/{id}', [NonIcsMemberController::class, 'update'])->name('admin.non-ics-members.update');
+        Route::delete('/{id}', [NonIcsMemberController::class, 'destroy'])->name('admin.non-ics-members.destroy');
+    });
+});
 
 
 // Protected routes that require authentication

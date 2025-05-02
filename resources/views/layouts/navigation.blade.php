@@ -82,7 +82,7 @@
 
             <!-- Navigation Links -->
             <div class="hidden space-x-8 sm:flex sm:items-center sm:justify-center flex-1">
-                
+
                 <x-nav-link :href="route('home.index')" :active="request()->routeIs('home.index')">
                     {{ __('ICS Hall') }}
                 </x-nav-link>
@@ -94,7 +94,7 @@
                 @endif
 
                 @if(Auth::user()->is_admin)
-                    <x-nav-link :href="route('members')" :active="request()->routeIs('members')">
+                    <x-nav-link :href="route('admin.members.index')" :active="request()->routeIs('admin.members.*')">
                         {{ __('Members') }}
                     </x-nav-link>
                 @endif
@@ -192,16 +192,19 @@
             <x-responsive-nav-link :href="route('home.index')" :active="request()->routeIs('home.index')">
                 {{ __('ICS Hall') }}
             </x-responsive-nav-link>
+
             @if(Auth::user()->is_admin)
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
             @endif
+
             @if(Auth::user()->is_admin)
-                <x-responsive-nav-link :href="route('members')" :active="request()->routeIs('members')">
+                <x-responsive-nav-link :href="route('admin.members.index')" :active="request()->routeIs('admin.members.*')">
                     {{ __('Members') }}
                 </x-responsive-nav-link>
             @endif
+
             <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.index')">
                 {{ __('Events') }}
             </x-responsive-nav-link>

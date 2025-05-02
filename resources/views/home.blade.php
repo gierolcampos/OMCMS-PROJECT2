@@ -58,7 +58,7 @@
                             </div>
                         </div>
                         <div class="mt-4">
-                            <a href="{{ route('members') }}" class="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-800">
+                            <a href="{{ route('members.index') }}" class="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-800">
                                 View Members
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -83,7 +83,7 @@
                             </div>
                         </div>
                         <div class="mt-4">
-                            <a href="{{ route('events') }}" class="inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-800">
+                            <a href="{{ route('events.index') }}" class="inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-800">
                                 See Events
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

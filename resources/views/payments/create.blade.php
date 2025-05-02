@@ -39,7 +39,7 @@
                         <p class="text-gray-600 mt-1">Enter payment details for a member</p>
                     </div>
                     <div>
-                        <a href="{{ Auth::user()->is_admin ? route('admin.payments.index') : route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <a href="{{ Auth::user()->is_admin ? route('admin.payments.index') : route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-[#c21313] bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-arrow-left mr-2"></i> Back to Payments
                         </a>
                     </div>
@@ -79,6 +79,7 @@
                                     function handlePayerTypeChange(value) {
                                         const icsMemberFields = document.getElementById('ics_member_fields');
                                         const nonIcsMemberFields = document.getElementById('non_ics_member_fields');
+                                        const userEmailSelect = document.getElementById('user_email');
 
                                         // Hide both first
                                         if (icsMemberFields) icsMemberFields.style.display = 'none';
@@ -89,15 +90,49 @@
                                             if (icsMemberFields) {
                                                 icsMemberFields.style.display = 'block';
 
+                                                // Make ICS Member fields required
+                                                if (userEmailSelect) {
+                                                    userEmailSelect.required = true;
+                                                    userEmailSelect.setAttribute('required', 'required');
+                                                    console.log('Set user_email as required for ICS member');
+                                                }
+
                                                 // Focus on the search input
                                                 setTimeout(function() {
                                                     const searchInput = document.getElementById('user_email_search');
                                                     if (searchInput) searchInput.focus();
                                                 }, 100);
                                             }
+
+                                            // Make non-ICS fields not required
+                                            const nonIcsEmail = document.getElementById('non_ics_email');
+                                            const nonIcsFullname = document.getElementById('non_ics_fullname');
+                                            const courseYearSection = document.getElementById('course_year_section');
+
+                                            if (nonIcsEmail) {
+                                                nonIcsEmail.required = false;
+                                                nonIcsEmail.removeAttribute('required');
+                                            }
+
+                                            if (nonIcsFullname) {
+                                                nonIcsFullname.required = false;
+                                                nonIcsFullname.removeAttribute('required');
+                                            }
+
+                                            if (courseYearSection) {
+                                                courseYearSection.required = false;
+                                                courseYearSection.removeAttribute('required');
+                                            }
                                         } else if (value === 'non_ics_member') {
                                             if (nonIcsMemberFields) {
                                                 nonIcsMemberFields.style.display = 'block';
+
+                                                // Make ICS Member fields NOT required
+                                                if (userEmailSelect) {
+                                                    userEmailSelect.required = false;
+                                                    userEmailSelect.removeAttribute('required');
+                                                    console.log('Removed required attribute from user_email for Non-ICS member');
+                                                }
 
                                                 // Make sure non-ICS fields are required
                                                 const nonIcsEmail = document.getElementById('non_ics_email');
@@ -308,7 +343,7 @@
                                 </script>
 
                                 @error('user_email')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    <p class="mt-1 text-sm text-red-600">{{ $errors->first('user_email') }}</p>
                                 @enderror
                             </div>
 
@@ -319,21 +354,21 @@
                                         <label for="non_ics_email" class="block text-sm font-medium text-gray-700 mb-1">NPC Email <span class="text-red-500">*</span></label>
                                         <input type="email" id="non_ics_email" name="non_ics_email" value="{{ old('non_ics_email') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter NPC email">
                                         @error('non_ics_email')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            <p class="mt-1 text-sm text-red-600">{{ $errors->first('non_ics_email') }}</p>
                                         @enderror
                                     </div>
                                     <div>
                                         <label for="non_ics_fullname" class="block text-sm font-medium text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
                                         <input type="text" id="non_ics_fullname" name="non_ics_fullname" value="{{ old('non_ics_fullname') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter full name">
                                         @error('non_ics_fullname')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            <p class="mt-1 text-sm text-red-600">{{ $errors->first('non_ics_fullname') }}</p>
                                         @enderror
                                     </div>
                                     <div>
                                         <label for="course_year_section" class="block text-sm font-medium text-gray-700 mb-1">Course, Year & Section <span class="text-red-500">*</span></label>
                                         <input type="text" id="course_year_section" name="course_year_section" value="{{ old('course_year_section') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., BSBA 2-A">
                                         @error('course_year_section')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            <p class="mt-1 text-sm text-red-600">{{ $errors->first('course_year_section') }}</p>
                                         @enderror
                                     </div>
                                     <div>
@@ -341,7 +376,7 @@
                                         <input type="tel" id="non_ics_mobile" name="non_ics_mobile" value="{{ old('non_ics_mobile') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="09123456789" pattern="[0-9]{11}">
                                         <p class="mt-1 text-xs text-gray-500">Enter 11-digit mobile number (optional)</p>
                                         @error('non_ics_mobile')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            <p class="mt-1 text-sm text-red-600">{{ $errors->first('non_ics_mobile') }}</p>
                                         @enderror
                                     </div>
                                 </div>
@@ -506,7 +541,7 @@
                                 <label for="receipt_control_number" class="block text-sm font-medium text-gray-700 mb-1">
                                     Receipt Control Number <span class="text-red-500">*</span>
                                 </label>
-                                <input type="number" id="receipt_control_number" name="receipt_control_number" value="{{ old('receipt_control_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter receipt control number">
+                                <input type="number" id="receipt_control_number" name="receipt_control_number" value="{{ old('receipt_control_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm" placeholder="Enter receipt control number">
                                 @error('receipt_control_number')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -518,13 +553,15 @@
                                     Proof of Payment <span class="text-red-500">*</span>
                                 </label>
                                 <input type="file" id="cash_proof_of_payment" name="cash_proof_of_payment"
-                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm"
                                     accept=".jpg,.jpeg">
                                 <p class="mt-1 text-xs text-gray-500">Only JPG files are accepted</p>
                                 @error('cash_proof_of_payment')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
+
+
                         </div>
                     </div>
 
@@ -556,14 +593,12 @@
                                 @enderror
                             </div>
 
-                            <!-- GCash Amount field removed -->
-
                             <!-- Reference Number -->
                             <div>
                                 <label for="reference_number" class="block text-sm font-medium text-gray-700 mb-1">
                                     Reference Number <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" id="reference_number" name="reference_number" value="{{ old('reference_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter GCash reference number">
+                                <input type="text" id="reference_number" name="reference_number" value="{{ old('reference_number') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm" placeholder="Enter GCash reference number">
                                 @error('reference_number')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -575,24 +610,75 @@
                                     Proof of Payment <span class="text-red-500">*</span>
                                 </label>
                                 <input type="file" id="gcash_proof_of_payment" name="gcash_proof_of_payment"
-                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#c21313] focus:border-[#c21313] sm:text-sm"
                                     accept=".jpg,.jpeg">
                                 <p class="mt-1 text-xs text-gray-500">Only JPG files are accepted</p>
                                 @error('gcash_proof_of_payment')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
+
+
                         </div>
                     </div>
 
                     <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                        <a href="{{ Auth::user()->is_admin ? route('admin.payments.index') : route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <a href="{{ Auth::user()->is_admin ? route('admin.payments.index') : route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-[#c21313] bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-times mr-2"></i> Cancel
                         </a>
-                        <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition transform hover:scale-105">
-                            <i class="fas fa-save mr-2"></i> Record Payment
+
+                        <!-- ICS Member Payment Button (default) -->
+                        <button type="submit" id="ics-payment-button" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c21313] transition transform hover:scale-105">
+                            <i class="fas fa-save mr-2"></i> Record ICS Payment
+                        </button>
+
+                        <!-- Non-ICS Member Payment Button (hidden by default) -->
+                        <button type="submit" id="non-ics-payment-button" name="non_ics_payment" value="1" class="hidden inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition transform hover:scale-105">
+                            <i class="fas fa-save mr-2"></i> Record Non-ICS Payment
                         </button>
                     </div>
+
+                    <script>
+                        // Function to toggle the payment buttons based on payer type
+                        function togglePaymentButtons() {
+                            const payerType = document.getElementById('payer_type');
+                            const icsPaymentButton = document.getElementById('ics-payment-button');
+                            const nonIcsPaymentButton = document.getElementById('non-ics-payment-button');
+
+                            if (!payerType || !icsPaymentButton || !nonIcsPaymentButton) {
+                                console.error('One or more button elements not found');
+                                return;
+                            }
+
+                            if (payerType.value === 'ics_member') {
+                                icsPaymentButton.classList.remove('hidden');
+                                nonIcsPaymentButton.classList.add('hidden');
+                                console.log('Showing ICS payment button');
+                            } else if (payerType.value === 'non_ics_member') {
+                                icsPaymentButton.classList.add('hidden');
+                                nonIcsPaymentButton.classList.remove('hidden');
+                                console.log('Showing Non-ICS payment button');
+                            } else {
+                                // If no payer type is selected, show the default button
+                                icsPaymentButton.classList.remove('hidden');
+                                nonIcsPaymentButton.classList.add('hidden');
+                                console.log('No payer type selected, showing default button');
+                            }
+                        }
+
+                        // Add event listener to payer type select
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const payerType = document.getElementById('payer_type');
+                            if (payerType) {
+                                payerType.addEventListener('change', togglePaymentButtons);
+
+                                // Initial toggle
+                                setTimeout(function() {
+                                    togglePaymentButtons();
+                                }, 300);
+                            }
+                        });
+                    </script>
 
                 </form>
             </div>
@@ -611,11 +697,30 @@
             return true; // Allow form submission
         }
 
+        // Always make sure user_email is not required for non-ICS members
+        if (payerType.value === 'non_ics_member') {
+            const userEmailSelect = document.getElementById('user_email');
+            if (userEmailSelect) {
+                userEmailSelect.required = false;
+                userEmailSelect.removeAttribute('required');
+                userEmailSelect.value = ''; // Clear the value
+                console.log('handleFormSubmit: Removed required attribute from user_email for Non-ICS member');
+            }
+        }
+
+        console.log('Form submission handler - Payer type:', payerType.value);
+
         // If non-ICS member is selected, ensure the fields are properly set
         if (payerType.value === 'non_ics_member') {
             const nonIcsEmail = document.getElementById('non_ics_email');
             const nonIcsFullname = document.getElementById('non_ics_fullname');
             const courseYearSection = document.getElementById('course_year_section');
+
+            console.log('Non-ICS Member fields:', {
+                email: nonIcsEmail ? nonIcsEmail.value : 'not found',
+                fullname: nonIcsFullname ? nonIcsFullname.value : 'not found',
+                courseYearSection: courseYearSection ? courseYearSection.value : 'not found'
+            });
 
             // Check if the fields are filled
             if (nonIcsEmail && nonIcsFullname && courseYearSection) {
@@ -629,6 +734,7 @@
                 if (userEmailSelect) {
                     userEmailSelect.required = false;
                     userEmailSelect.removeAttribute('required');
+                    userEmailSelect.value = ''; // Clear the value
                 }
 
                 // Make sure non-ICS fields are required
@@ -638,6 +744,12 @@
                 nonIcsFullname.setAttribute('required', 'required');
                 courseYearSection.required = true;
                 courseYearSection.setAttribute('required', 'required');
+
+                console.log('Non-ICS Member validation passed');
+            } else {
+                console.error('One or more Non-ICS Member fields not found in the DOM');
+                alert('Error: One or more Non-ICS Member fields not found. Please try again or contact support.');
+                return false;
             }
         } else if (payerType.value === 'ics_member') {
             // Make sure ICS member fields are required
@@ -655,17 +767,22 @@
             if (nonIcsEmail) {
                 nonIcsEmail.required = false;
                 nonIcsEmail.removeAttribute('required');
+                nonIcsEmail.value = ''; // Clear the value
             }
 
             if (nonIcsFullname) {
                 nonIcsFullname.required = false;
                 nonIcsFullname.removeAttribute('required');
+                nonIcsFullname.value = ''; // Clear the value
             }
 
             if (courseYearSection) {
                 courseYearSection.required = false;
                 courseYearSection.removeAttribute('required');
+                courseYearSection.value = ''; // Clear the value
             }
+
+            console.log('ICS Member validation passed');
         }
 
         // Check payment method
@@ -717,18 +834,33 @@
         const courseYearSection = document.getElementById('course_year_section');
 
         if (!payerType) {
+            console.error('Payer type element not found');
             return;
         }
 
+        console.log('Toggling payer fields for type:', payerType.value);
+
         // First, hide all payer-specific fields
-        if (icsMemberFields) icsMemberFields.style.display = 'none';
-        if (nonIcsMemberFields) nonIcsMemberFields.style.display = 'none';
+        if (icsMemberFields) {
+            icsMemberFields.style.display = 'none';
+            console.log('ICS member fields hidden');
+        } else {
+            console.error('ICS member fields container not found');
+        }
+
+        if (nonIcsMemberFields) {
+            nonIcsMemberFields.style.display = 'none';
+            console.log('Non-ICS member fields hidden');
+        } else {
+            console.error('Non-ICS member fields container not found');
+        }
 
         // Then show only the fields for the selected payer type
         if (payerType.value === 'ics_member') {
             // Show ICS Member fields
             if (icsMemberFields) {
                 icsMemberFields.style.display = 'block';
+                console.log('ICS member fields shown');
             }
 
             // Make ICS Member fields required
@@ -741,6 +873,9 @@
                 if (userEmailSearch) {
                     userEmailSearch.setAttribute('required', 'required');
                 }
+                console.log('ICS member email field set as required');
+            } else {
+                console.error('User email select element not found');
             }
 
             // Make Non-ICS Member fields not required
@@ -748,23 +883,27 @@
                 nonIcsEmail.required = false;
                 nonIcsEmail.removeAttribute('required');
                 nonIcsEmail.value = '';
+                console.log('Non-ICS email field cleared and set as not required');
             }
 
             if (nonIcsFullname) {
                 nonIcsFullname.required = false;
                 nonIcsFullname.removeAttribute('required');
                 nonIcsFullname.value = '';
+                console.log('Non-ICS fullname field cleared and set as not required');
             }
 
             if (courseYearSection) {
                 courseYearSection.required = false;
                 courseYearSection.removeAttribute('required');
                 courseYearSection.value = '';
+                console.log('Non-ICS course/year/section field cleared and set as not required');
             }
         } else if (payerType.value === 'non_ics_member') {
             // Show Non-ICS Member fields
             if (nonIcsMemberFields) {
                 nonIcsMemberFields.style.display = 'block';
+                console.log('Non-ICS member fields shown');
             }
 
             // Make ICS Member fields not required
@@ -772,24 +911,36 @@
                 userEmailSelect.required = false;
                 userEmailSelect.removeAttribute('required');
                 userEmailSelect.value = '';
+                console.log('ICS member email field cleared and set as not required');
             }
 
             // Make Non-ICS Member fields required
             if (nonIcsEmail) {
                 nonIcsEmail.required = true;
                 nonIcsEmail.setAttribute('required', 'required');
+                console.log('Non-ICS email field set as required');
+            } else {
+                console.error('Non-ICS email element not found');
             }
 
             if (nonIcsFullname) {
                 nonIcsFullname.required = true;
                 nonIcsFullname.setAttribute('required', 'required');
+                console.log('Non-ICS fullname field set as required');
+            } else {
+                console.error('Non-ICS fullname element not found');
             }
 
             if (courseYearSection) {
                 courseYearSection.required = true;
                 courseYearSection.setAttribute('required', 'required');
+                console.log('Non-ICS course/year/section field set as required');
+            } else {
+                console.error('Non-ICS course/year/section element not found');
             }
         } else {
+            console.log('No payer type selected or unknown payer type');
+
             // Make all fields not required
             if (userEmailSelect) {
                 userEmailSelect.required = false;
@@ -823,6 +974,36 @@
             const payerType = document.getElementById('payer_type');
             togglePayerFields();
         }, 100);
+
+        // Add form submission handler
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                console.log('Form submission event triggered');
+
+                // Explicitly handle user_email field for non-ICS members
+                const payerType = document.getElementById('payer_type');
+                const userEmailSelect = document.getElementById('user_email');
+
+                if (payerType && payerType.value === 'non_ics_member' && userEmailSelect) {
+                    // Make sure user_email is not required for non-ICS members
+                    userEmailSelect.required = false;
+                    userEmailSelect.removeAttribute('required');
+                    userEmailSelect.value = ''; // Clear the value
+                    console.log('Explicitly removed required attribute from user_email before form submission');
+                }
+
+                const result = handleFormSubmit(e);
+                if (result === false) {
+                    e.preventDefault();
+                    console.log('Form submission prevented by validation');
+                } else {
+                    console.log('Form validation passed, submitting form');
+                }
+            });
+        } else {
+            console.error('Form element not found');
+        }
 
         const paymentMethod = document.getElementById('payment_method');
         const gcashFieldsContainer = document.getElementById('gcash-fields');
@@ -907,10 +1088,8 @@
                 if (receiptControlField) {
                     receiptControlField.style.display = 'block';
                     console.log('Receipt Control field shown');
-                    alert('Receipt Control field should now be visible'); // Debug alert
                 } else {
                     console.error('Receipt Control field not found!');
-                    alert('ERROR: Receipt Control field not found!'); // Debug alert
                 }
 
                 // Make cash fields required
@@ -932,26 +1111,30 @@
                 }
 
                 // Remove required from GCash fields
-                const gcashFieldIds = ['gcash_name', 'gcash_num', 'gcash_amount', 'reference_number'];
+                const gcashFieldIds = ['gcash_name', 'gcash_num', 'reference_number', 'gcash_proof_of_payment'];
                 gcashFieldIds.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     if (field) {
                         field.required = false;
                         field.removeAttribute('required');
-                        field.value = '';
+                        if (fieldId !== 'gcash_proof_of_payment') {
+                            field.value = '';
+                        }
                     }
                 });
             } else {
                 console.log('No payment method selected, hiding all payment-specific fields');
 
                 // Remove required from all fields
-                const gcashFieldIds = ['gcash_name', 'gcash_num', 'gcash_amount', 'reference_number'];
+                const gcashFieldIds = ['gcash_name', 'gcash_num', 'reference_number', 'gcash_proof_of_payment'];
                 gcashFieldIds.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     if (field) {
                         field.required = false;
                         field.removeAttribute('required');
-                        field.value = '';
+                        if (fieldId !== 'gcash_proof_of_payment') {
+                            field.value = '';
+                        }
                     }
                 });
 
@@ -1107,6 +1290,7 @@
                     if (cashProofOfPayment) cashProofOfPayment.focus();
                     return;
                 }
+
             } else if (paymentMethod.value === 'GCASH') {
                 // Validate GCASH fields
                 const gcashName = document.getElementById('gcash_name');

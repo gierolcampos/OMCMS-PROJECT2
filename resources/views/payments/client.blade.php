@@ -52,7 +52,7 @@
                             </select>
                         </div>
                         <div class="md:col-span-2 flex items-center gap-4">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 transition">
                                 <i class="fas fa-filter mr-2"></i> Apply Filters
                             </button>
                             <a href="{{ route('client.payments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition">
@@ -102,10 +102,9 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex justify-end space-x-2">
-                                            <a href="{{ route('client.payments.show', $payment->id) }}" class="text-indigo-600 hover:text-indigo-900" title="View Details">
+                                            <a href="{{ route('client.payments.show', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <!-- GCash receipt link removed -->
                                         </div>
                                     </td>
                                 </tr>
