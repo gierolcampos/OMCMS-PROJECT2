@@ -107,9 +107,15 @@
                     {{ __('Announcements') }}
                 </x-nav-link>
 
-                <x-nav-link :href="route('payments')" :active="request()->routeIs('payments')">
-                    {{ __('Payments') }}
-                </x-nav-link>
+                @if(Auth::user()->is_admin)
+                    <x-nav-link :href="route('admin.payments.index')" :active="request()->routeIs('admin.payments.*')">
+                        {{ __('Payments') }}
+                    </x-nav-link>
+                @else
+                    <x-nav-link :href="route('client.payments.index')" :active="request()->routeIs('client.payments.*')">
+                        {{ __('Payments') }}
+                    </x-nav-link>
+                @endif
 
                 @if(Auth::user()->is_admin)
                     <x-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
@@ -202,9 +208,15 @@
             <x-responsive-nav-link :href="route('announcements')" :active="request()->routeIs('announcements')">
                 {{ __('Announcements') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('payments')" :active="request()->routeIs('payments')">
-                {{ __('Payments') }}
-            </x-responsive-nav-link>
+            @if(Auth::user()->is_admin)
+                <x-responsive-nav-link :href="route('admin.payments.index')" :active="request()->routeIs('admin.payments.*')">
+                    {{ __('Payments') }}
+                </x-responsive-nav-link>
+            @else
+                <x-responsive-nav-link :href="route('client.payments.index')" :active="request()->routeIs('client.payments.*')">
+                    {{ __('Payments') }}
+                </x-responsive-nav-link>
+            @endif
             @if(Auth::user()->is_admin)
                 <x-responsive-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
                     {{ __('Letters') }}

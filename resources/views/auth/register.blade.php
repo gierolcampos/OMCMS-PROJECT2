@@ -37,7 +37,7 @@
             </div>
 
             <form method="POST" action="{{ route('register') }}" class="mt-8">
-                @csrf
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div>
                         <label for="studentnumber" class="block text-sm font-semibold text-gray-700">Student Number</label>
@@ -47,8 +47,8 @@
                             value="{{ old('studentnumber') }}">
                     </div>
                 </div>
-                
-            
+
+
                 <!-- Row 2: First Name | Middle Name | Last Name -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
@@ -70,7 +70,7 @@
                             value="{{ old('lastname') }}">
                     </div>
                 </div>
-            
+
                 <!-- Row 3: Suffix | Contact Number | NPC Email -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                     <div>
@@ -82,7 +82,7 @@
                     <div>
                         <label for="mobile_no" class="block text-sm font-semibold text-gray-700">Contact Number</label>
                         <input id="mobile_no" name="mobile_no" type="text" maxlength="11" pattern="[0-9]{11}" required autocomplete="mobilenumber" tabindex="6" inputmode="numeric" placeholder="Eg: 09123456789"
-                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" 
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');"
                             class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-red-400 focus:border-red-500 transition px-4 py-2 bg-white placeholder-gray-400"
                             value="{{ old('mobile_no') }}">
                     </div>
@@ -93,7 +93,7 @@
                             value="{{ old('email') }}">
                     </div>
                 </div>
-            
+
                 <!-- Row 4: Course | Year | Section -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                     <div>
@@ -128,7 +128,7 @@
                         </select>
                     </div>
                 </div>
-            
+
                 <!-- Row 5: Password | Confirm Password -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div>
@@ -159,7 +159,7 @@
                         </div>
                     </div>
                 </div>
-            
+
                 <!-- Submit Button -->
                 <div class="flex items-center justify-end mt-6 space-x-5">
                     <a class="underline text-sm text-gray-600 hover:text-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" href="{{ route('login') }}">
@@ -170,7 +170,7 @@
                     </button>
                 </div>
             </form>
-            
+
             @if ($errors->any())
     <div class=" mt-7 mb-4 text-sm text-red-600">
         <ul>
@@ -201,7 +201,7 @@
                 const input = document.getElementById(inputId);
                 const button = input.nextElementSibling;
                 const svg = button.querySelector('svg');
-                
+
                 if (input.type === 'password') {
                     input.type = 'text';
                     svg.innerHTML = `

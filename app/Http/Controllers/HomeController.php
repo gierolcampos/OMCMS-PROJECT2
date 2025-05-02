@@ -27,7 +27,7 @@ class HomeController extends Controller
 
     public function payments()
     {
-        return view('payments.index');
+        return redirect()->route('client.payments.index');
     }   
     
 

@@ -67,7 +67,7 @@
             <div class="mb-8 md:mb-0">
                 <h5 class="footer-heading">About OMCMS</h5>
                 <p class="text-gray-400">
-                    Organization Management and Communication Management System (OMCMS) is dedicated to streamlining organizational processes and enhancing communication within the ICS community.
+                    Organization Management and Club Management System (OMCMS) is dedicated to streamlining organizational processes and enhancing communication within the ICS community.
                 </p>
                 <div class="mt-4 flex space-x-3">
                     <a href="https://facebook.com" target="_blank" class="footer-social" aria-label="Facebook">
