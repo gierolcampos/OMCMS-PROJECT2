@@ -16,7 +16,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Client
+    // Client side
 
     // Events routes
     Route::get('/events', [App\Http\Controllers\EventController::class, 'index'])->name('events.index');
@@ -142,3 +142,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Include payment types routes
+require __DIR__.'/payment-types.php';

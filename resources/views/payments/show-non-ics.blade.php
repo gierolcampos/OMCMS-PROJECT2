@@ -53,8 +53,8 @@
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
                         <div class="flex justify-between items-center">
                             <h2 class="text-lg font-semibold text-gray-800">Payment #{{ $nonIcsMember->id }}</h2>
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                {{ $nonIcsMember->payment_status === 'Paid' ? 'bg-green-100 text-green-800' : 
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {{ $nonIcsMember->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
                                    ($nonIcsMember->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
                                 {{ $nonIcsMember->payment_status }}
                             </span>
@@ -189,13 +189,13 @@
                             <form method="POST" action="{{ route('admin.payments.approve-non-ics', $nonIcsMember->id) }}">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 transition">
-                                    <i class="fas fa-check mr-2"></i> Approve Payment
+                                    <i class="fas fa-check-circle mr-2"></i> Approve Payment
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('admin.payments.reject-non-ics', $nonIcsMember->id) }}">
+                            <form method="POST" action="{{ route('admin.payments.reject-non-ics', $nonIcsMember->id) }}" onsubmit="return confirm('Are you sure you want to reject this payment?');">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 transition">
-                                    <i class="fas fa-times mr-2"></i> Reject Payment
+                                    <i class="fas fa-times-circle mr-2"></i> Reject Payment
                                 </button>
                             </form>
                         </div>

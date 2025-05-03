@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\NonIcsMember;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 
 class PaymentController extends Controller
@@ -19,6 +20,7 @@ class PaymentController extends Controller
 
         if ($user->is_admin) {
             // Admin view
+            // Get payments from the original Order table
             $query = Order::with(['user', 'nonIcsMember']);
 
             // Apply search filter
@@ -50,6 +52,68 @@ class PaymentController extends Controller
 
             $payments = $query->orderBy('created_at', 'desc')->paginate(10);
 
+            // Get cash payments
+            $cashQuery = \App\Models\CashPayment::with('user');
+
+            // Apply search filter for cash payments
+            if (request('search')) {
+                $cashQuery->where(function($q) {
+                    $q->where('id', 'like', '%' . request('search') . '%')
+                      ->orWhere('email', 'like', '%' . request('search') . '%')
+                      ->orWhereHas('user', function($q) {
+                          $q->where('firstname', 'like', '%' . request('search') . '%')
+                            ->orWhere('lastname', 'like', '%' . request('search') . '%')
+                            ->orWhere('email', 'like', '%' . request('search') . '%');
+                      });
+                });
+            }
+
+            // Apply payment method filter for cash payments
+            if (request('payment_method')) {
+                // Only show cash payments if CASH is selected
+                if (request('payment_method') !== 'CASH') {
+                    $cashQuery->where('id', 0); // This will return no results
+                }
+            }
+
+            // Apply status filter for cash payments
+            if (request('status')) {
+                $cashQuery->where('payment_status', request('status'));
+            }
+
+            $cashPayments = $cashQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'cash_page');
+
+            // Get GCash payments
+            $gcashQuery = \App\Models\GcashPayment::with('user');
+
+            // Apply search filter for GCash payments
+            if (request('search')) {
+                $gcashQuery->where(function($q) {
+                    $q->where('id', 'like', '%' . request('search') . '%')
+                      ->orWhere('email', 'like', '%' . request('search') . '%')
+                      ->orWhereHas('user', function($q) {
+                          $q->where('firstname', 'like', '%' . request('search') . '%')
+                            ->orWhere('lastname', 'like', '%' . request('search') . '%')
+                            ->orWhere('email', 'like', '%' . request('search') . '%');
+                      });
+                });
+            }
+
+            // Apply payment method filter for GCash payments
+            if (request('payment_method')) {
+                // Only show GCash payments if GCASH is selected
+                if (request('payment_method') !== 'GCASH') {
+                    $gcashQuery->where('id', 0); // This will return no results
+                }
+            }
+
+            // Apply status filter for GCash payments
+            if (request('status')) {
+                $gcashQuery->where('payment_status', request('status'));
+            }
+
+            $gcashPayments = $gcashQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'gcash_page');
+
             // Get non-ICS members data directly from the non_ics_members table
             $nonIcsQuery = NonIcsMember::query();
 
@@ -72,11 +136,11 @@ class PaymentController extends Controller
                 $nonIcsQuery->where('payment_status', request('status'));
             }
 
-            $nonIcsMembers = $nonIcsQuery->orderBy('created_at', 'desc')->paginate(10);
+            $nonIcsMembers = $nonIcsQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'non_ics_page');
 
             // Calculate statistics
+            // From original Order table
             $statsQuery = Order::query();
-
             $totalPayments = $statsQuery->clone()->where('payment_status', 'Paid')->sum('total_price');
             $thisMonthPayments = $statsQuery->clone()
                 ->where('payment_status', 'Paid')
@@ -85,6 +149,24 @@ class PaymentController extends Controller
                 ->sum('total_price');
             $pendingPayments = $statsQuery->clone()->where('payment_status', 'Pending')->sum('total_price');
             $rejectedPayments = $statsQuery->clone()->where('payment_status', 'Rejected')->sum('total_price');
+
+            // Add cash payments statistics
+            $totalPayments += \App\Models\CashPayment::where('payment_status', 'Paid')->sum('total_price');
+            $thisMonthPayments += \App\Models\CashPayment::where('payment_status', 'Paid')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_price');
+            $pendingPayments += \App\Models\CashPayment::where('payment_status', 'Pending')->sum('total_price');
+            $rejectedPayments += \App\Models\CashPayment::where('payment_status', 'Rejected')->sum('total_price');
+
+            // Add GCash payments statistics
+            $totalPayments += \App\Models\GcashPayment::where('payment_status', 'Paid')->sum('total_price');
+            $thisMonthPayments += \App\Models\GcashPayment::where('payment_status', 'Paid')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_price');
+            $pendingPayments += \App\Models\GcashPayment::where('payment_status', 'Pending')->sum('total_price');
+            $rejectedPayments += \App\Models\GcashPayment::where('payment_status', 'Rejected')->sum('total_price');
 
             // Add non-ICS members statistics
             $totalPayments += NonIcsMember::where('payment_status', 'Paid')->sum('total_price');
@@ -97,6 +179,8 @@ class PaymentController extends Controller
 
             return view('payments.index', compact(
                 'payments',
+                'cashPayments',
+                'gcashPayments',
                 'nonIcsMembers',
                 'totalPayments',
                 'thisMonthPayments',
@@ -105,6 +189,7 @@ class PaymentController extends Controller
             ));
         } else {
             // Client view
+            // Get payments from the original Order table
             $query = Order::where('user_id', $user->id);
 
             // Apply search filter
@@ -119,7 +204,106 @@ class PaymentController extends Controller
 
             $payments = $query->orderBy('created_at', 'desc')->paginate(10);
 
-            return view('payments.client', compact('payments'));
+            // Get cash payments
+            $cashQuery = \App\Models\CashPayment::where('user_id', $user->id);
+
+            // Apply search filter for cash payments
+            if (request('search')) {
+                $cashQuery->where('id', 'like', '%' . request('search') . '%');
+            }
+
+            // Apply payment method filter for cash payments
+            if (request('payment_method')) {
+                // Only show cash payments if CASH is selected
+                if (request('payment_method') !== 'CASH') {
+                    $cashQuery->where('id', 0); // This will return no results
+                }
+            }
+
+            // Apply status filter for cash payments
+            if (request('payment_status')) {
+                $cashQuery->where('payment_status', request('payment_status'));
+            }
+
+            $cashPayments = $cashQuery->orderBy('created_at', 'desc')->paginate(5, ['*'], 'cash_page');
+
+            // Get GCash payments
+            $gcashQuery = \App\Models\GcashPayment::where('user_id', $user->id);
+
+            // Apply search filter for GCash payments
+            if (request('search')) {
+                $gcashQuery->where('id', 'like', '%' . request('search') . '%');
+            }
+
+            // Apply payment method filter for GCash payments
+            if (request('payment_method')) {
+                // Only show GCash payments if GCASH is selected
+                if (request('payment_method') !== 'GCASH') {
+                    $gcashQuery->where('id', 0); // This will return no results
+                }
+            }
+
+            // Apply status filter for GCash payments
+            if (request('payment_status')) {
+                $gcashQuery->where('payment_status', request('payment_status'));
+            }
+
+            $gcashPayments = $gcashQuery->orderBy('created_at', 'desc')->paginate(5, ['*'], 'gcash_page');
+
+            // Calculate statistics
+            // From original Order table
+            $totalPayments = Order::where('user_id', $user->id)
+                ->where('payment_status', 'Paid')
+                ->sum('total_price');
+
+            $thisMonthPayments = Order::where('user_id', $user->id)
+                ->where('payment_status', 'Paid')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_price');
+
+            $pendingPayments = Order::where('user_id', $user->id)
+                ->where('payment_status', 'Pending')
+                ->sum('total_price');
+
+            // Add cash payments statistics
+            $totalPayments += \App\Models\CashPayment::where('user_id', $user->id)
+                ->where('payment_status', 'Paid')
+                ->sum('total_price');
+
+            $thisMonthPayments += \App\Models\CashPayment::where('user_id', $user->id)
+                ->where('payment_status', 'Paid')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_price');
+
+            $pendingPayments += \App\Models\CashPayment::where('user_id', $user->id)
+                ->where('payment_status', 'Pending')
+                ->sum('total_price');
+
+            // Add GCash payments statistics
+            $totalPayments += \App\Models\GcashPayment::where('user_id', $user->id)
+                ->where('payment_status', 'Paid')
+                ->sum('total_price');
+
+            $thisMonthPayments += \App\Models\GcashPayment::where('user_id', $user->id)
+                ->where('payment_status', 'Paid')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_price');
+
+            $pendingPayments += \App\Models\GcashPayment::where('user_id', $user->id)
+                ->where('payment_status', 'Pending')
+                ->sum('total_price');
+
+            return view('payments.member', compact(
+                'payments',
+                'cashPayments',
+                'gcashPayments',
+                'totalPayments',
+                'thisMonthPayments',
+                'pendingPayments'
+            ));
         }
     }
 
@@ -216,7 +400,7 @@ class PaymentController extends Controller
                 $rules['gcash_proof_of_payment'] = 'required|file|mimes:jpg,jpeg|max:2048';
             } else if ($request->payment_method === 'CASH') {
                 $rules['officer_in_charge'] = 'required|string';
-                $rules['receipt_control_number'] = 'required|integer';
+                $rules['receipt_control_number'] = 'required|numeric';
                 $rules['cash_proof_of_payment'] = 'required|file|mimes:jpg,jpeg|max:2048';
             }
 
@@ -239,7 +423,6 @@ class PaymentController extends Controller
                 ]);
 
                 // Additional Non-ICS member fields
-                $rules['student_id'] = 'nullable|string|max:50';
                 $rules['payment_status'] = 'nullable|string|in:None,Pending,Paid';
             }
 
@@ -248,7 +431,7 @@ class PaymentController extends Controller
             $messages = [
                 'officer_in_charge.required' => 'The officer in charge field is required when payment method is CASH.',
                 'receipt_control_number.required' => 'The receipt control number field is required when payment method is CASH.',
-                'receipt_control_number.integer' => 'The receipt control number must be an integer.',
+                'receipt_control_number.numeric' => 'The receipt control number must be a number.',
                 'purpose.required' => 'The purpose field is required.',
                 'gcash_proof_of_payment.required' => 'The proof of payment is required when payment method is GCASH.',
                 'gcash_proof_of_payment.mimes' => 'The proof of payment must be a JPG file.',
@@ -276,72 +459,37 @@ class PaymentController extends Controller
                 try {
                     \Log::info('Non-ICS Member selected, checking database');
 
-                    // Check if the non-ICS member already exists
-                    $existingMember = NonIcsMember::where('email', $validated['non_ics_email'])->first();
+                    // Always create a new non-ICS member payment record for each submission
+                    // This allows multiple payments with different purposes, descriptions, etc.
+                    \Log::info('Creating new Non-ICS Member record');
+                    // Prepare data for NonIcsMember creation
+                    $nonIcsMemberData = [
+                        'email' => $validated['non_ics_email'],
+                        'fullname' => $validated['non_ics_fullname'],
+                        'course_year_section' => $validated['course_year_section'],
+                        'mobile_no' => $validated['non_ics_mobile'] ?? null,
+                        'payment_status' => $validated['payment_status'] ?? 'None',
+                        'purpose' => $validated['purpose'] ?? null,
+                        'total_price' => $validated['total_price'] ?? null,
+                        'method' => $validated['payment_method'],
+                        'description' => $validated['description'] ?? null,
+                        'placed_on' => now()
+                    ];
 
-                    if ($existingMember) {
-                        $nonIcsMember = $existingMember;
-                        \Log::info('Existing Non-ICS Member found:', ['id' => $nonIcsMember->id, 'email' => $nonIcsMember->email]);
-
-                        // Update the existing member with the new data
-                        $nonIcsMember->fullname = $validated['non_ics_fullname'];
-                        $nonIcsMember->course_year_section = $validated['course_year_section'];
-                        $nonIcsMember->mobile_no = $validated['non_ics_mobile'] ?? null;
-                        $nonIcsMember->purpose = $validated['purpose'] ?? null;
-                        $nonIcsMember->total_price = $validated['total_price'] ?? null;
-                        $nonIcsMember->method = $validated['payment_method'];
-                        $nonIcsMember->description = $validated['description'] ?? null;
-                        $nonIcsMember->placed_on = now();
-
-                        // Update payment method specific fields
-                        if ($validated['payment_method'] === 'CASH') {
-                            $nonIcsMember->receipt_control_number = $validated['receipt_control_number'] ?? null;
-                            // Cash proof path will be set later after file upload
-                        } else if ($validated['payment_method'] === 'GCASH') {
-                            $nonIcsMember->gcash_name = $validated['gcash_name'] ?? null;
-                            $nonIcsMember->gcash_num = $validated['gcash_num'] ?? null;
-                            $nonIcsMember->reference_number = $validated['reference_number'] ?? null;
-                            // GCash proof path will be set later after file upload
-                        }
-
-                        // Update additional fields if they exist in the request
-                        if (isset($validated['student_id'])) $nonIcsMember->student_id = $validated['student_id'];
-                        if (isset($validated['payment_status'])) $nonIcsMember->payment_status = $validated['payment_status'];
-
-                        $nonIcsMember->save();
-                        \Log::info('Existing Non-ICS Member updated');
-                    } else {
-                        \Log::info('Creating new Non-ICS Member record');
-                        // Prepare data for NonIcsMember creation
-                        $nonIcsMemberData = [
-                            'email' => $validated['non_ics_email'],
-                            'fullname' => $validated['non_ics_fullname'],
-                            'course_year_section' => $validated['course_year_section'],
-                            'mobile_no' => $validated['non_ics_mobile'] ?? null,
-                            'student_id' => $validated['student_id'] ?? null,
-                            'payment_status' => $validated['payment_status'] ?? 'None',
-                            'purpose' => $validated['purpose'] ?? null,
-                            'total_price' => $validated['total_price'] ?? null,
-                            'method' => $validated['payment_method'],
-                            'description' => $validated['description'] ?? null,
-                            'placed_on' => now()
-                        ];
-
-                        // Add payment method specific fields
-                        if ($validated['payment_method'] === 'CASH') {
-                            $nonIcsMemberData['receipt_control_number'] = $validated['receipt_control_number'] ?? null;
-                            // Cash proof path will be set later after file upload
-                        } else if ($validated['payment_method'] === 'GCASH') {
-                            $nonIcsMemberData['gcash_name'] = $validated['gcash_name'] ?? null;
-                            $nonIcsMemberData['gcash_num'] = $validated['gcash_num'] ?? null;
-                            $nonIcsMemberData['reference_number'] = $validated['reference_number'] ?? null;
-                            // GCash proof path will be set later after file upload
-                        }
-
-                        // Use the create method to ensure proper model creation
-                        $nonIcsMember = NonIcsMember::create($nonIcsMemberData);
-                        \Log::info('New Non-ICS Member created:', ['id' => $nonIcsMember->id, 'email' => $nonIcsMember->email]);
+                    // Add payment method specific fields
+                    if ($validated['payment_method'] === 'CASH') {
+                        $nonIcsMemberData['receipt_control_number'] = $validated['receipt_control_number'] ?? null;
+                        // Cash proof path will be set later after file upload
+                    } else if ($validated['payment_method'] === 'GCASH') {
+                        $nonIcsMemberData['gcash_name'] = $validated['gcash_name'] ?? null;
+                        $nonIcsMemberData['gcash_num'] = $validated['gcash_num'] ?? null;
+                        $nonIcsMemberData['reference_number'] = $validated['reference_number'] ?? null;
+                        // GCash proof path will be set later after file upload
                     }
+
+                    // Use the create method to ensure proper model creation
+                    $nonIcsMember = NonIcsMember::create($nonIcsMemberData);
+                    \Log::info('New Non-ICS Member created:', ['id' => $nonIcsMember->id, 'email' => $nonIcsMember->email]);
                 } catch (\Exception $e) {
                     \Log::error('Error processing Non-ICS Member:', [
                         'error' => $e->getMessage(),
@@ -443,7 +591,6 @@ class PaymentController extends Controller
                         'fullname' => $nonIcsMember->fullname,
                         'course_year_section' => $nonIcsMember->course_year_section,
                         'mobile_no' => $nonIcsMember->mobile_no,
-                        'student_id' => $nonIcsMember->student_id,
                         'payment_status' => $nonIcsMember->payment_status
                     ]);
                 } else {
@@ -486,18 +633,60 @@ class PaymentController extends Controller
                     ]);
                 }
 
-                // Only create an order if this is NOT a non-ICS payment
+                // Only create a payment if this is NOT a non-ICS payment
                 if (!($isNonIcsPayment && $validated['payer_type'] === 'non_ics_member')) {
                     // Log the order data before creation
-                    \Log::info('Order Data Before Creation:', $orderData);
+                    \Log::info('Payment Data Before Creation:', $orderData);
 
-                    // Create the order using the create method
-                    $order = Order::create($orderData);
+                    // For ICS members, save to either cash_payments or gcash_payments table based on payment method
+                    if ($validated['payer_type'] === 'ics_member') {
+                        if ($validated['payment_method'] === 'CASH') {
+                            // Create a new cash payment record for each submission
+                            $cashPayment = \App\Models\CashPayment::create([
+                                'user_id' => $user->id,
+                                'email' => $user->email,
+                                'total_price' => $validated['total_price'],
+                                'purpose' => $validated['purpose'],
+                                'placed_on' => now(),
+                                'payment_status' => $validated['payment_status'],
+                                'officer_in_charge' => $validated['officer_in_charge'] ?? null,
+                                'receipt_control_number' => $validated['receipt_control_number'] ?? null,
+                                'cash_proof_path' => $cashProofPath,
+                                'description' => $validated['description'] ?? null,
+                            ]);
+                            \Log::info('Cash Payment Created:', ['id' => $cashPayment->id, 'data' => $cashPayment->toArray()]);
 
-                    // Log the created order
-                    \Log::info('Order Created:', ['id' => $order->id, 'data' => $order->toArray()]);
+                            $order = null; // No Order record needed
+                        } else if ($validated['payment_method'] === 'GCASH') {
+                            // Create a new GCash payment record for each submission
+                            $gcashPayment = \App\Models\GcashPayment::create([
+                                'user_id' => $user->id,
+                                'email' => $user->email,
+                                'total_price' => $validated['total_price'],
+                                'purpose' => $validated['purpose'],
+                                'placed_on' => now(),
+                                'payment_status' => $validated['payment_status'],
+                                'gcash_name' => $validated['gcash_name'] ?? null,
+                                'gcash_num' => $validated['gcash_num'] ?? null,
+                                'reference_number' => $validated['reference_number'] ?? null,
+                                'gcash_proof_path' => $gcashProofPath,
+                                'description' => $validated['description'] ?? null,
+                            ]);
+                            \Log::info('GCash Payment Created:', ['id' => $gcashPayment->id, 'data' => $gcashPayment->toArray()]);
+
+                            $order = null; // No Order record needed
+                        } else {
+                            // Fallback to the original Order table if needed
+                            $order = Order::create($orderData);
+                            \Log::info('Order Created (fallback):', ['id' => $order->id, 'data' => $order->toArray()]);
+                        }
+                    } else {
+                        // For any other case, create an Order record as before
+                        $order = Order::create($orderData);
+                        \Log::info('Order Created:', ['id' => $order->id, 'data' => $order->toArray()]);
+                    }
                 } else {
-                    \Log::info('Skipping Order creation for Non-ICS member payment');
+                    \Log::info('Skipping payment creation for Non-ICS member payment');
                     $order = null; // Set to null since we're not creating an order
                 }
 
@@ -778,7 +967,7 @@ class PaymentController extends Controller
                 'officer_in_charge' => $user->firstname . ' ' . $user->lastname
             ]);
 
-            return redirect()->route('admin.payments.index')
+            return redirect()->route('admin.non-ics-members.index')
                 ->with('success', 'Non-ICS member payment approved successfully.');
         } catch (\Exception $e) {
             \Log::error('Non-ICS member payment approval failed: ' . $e->getMessage());
@@ -811,7 +1000,7 @@ class PaymentController extends Controller
                 'officer_in_charge' => $user->firstname . ' ' . $user->lastname
             ]);
 
-            return redirect()->route('admin.payments.index')
+            return redirect()->route('admin.non-ics-members.index')
                 ->with('success', 'Non-ICS member payment rejected successfully.');
         } catch (\Exception $e) {
             \Log::error('Non-ICS member payment rejection failed: ' . $e->getMessage());
@@ -826,7 +1015,7 @@ class PaymentController extends Controller
     public function showNonIcs($id)
     {
         try {
-            $nonIcsMember = NonIcsMember::findOrFail($id);
+            $payment = NonIcsMember::findOrFail($id);
             $user = Auth::user();
 
             // Only admins can view non-ICS member payment details
@@ -834,13 +1023,15 @@ class PaymentController extends Controller
                 abort(403, 'Unauthorized.');
             }
 
-            return view('payments.show-non-ics', compact('nonIcsMember'));
+            return view('payments.show', compact('payment'));
         } catch (\Exception $e) {
             \Log::error('Failed to show non-ICS member payment: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Failed to show payment details. Please try again.');
         }
     }
+
+
 
     public function clientIndex(Request $request)
     {
@@ -860,6 +1051,11 @@ class PaymentController extends Controller
             });
         }
 
+        // Apply payment method filter
+        if ($request->has('payment_method') && $request->payment_method !== '') {
+            $query->where('method', $request->payment_method);
+        }
+
         // Apply payment status filter
         if ($request->has('payment_status') && $request->payment_status !== '') {
             $query->where('payment_status', $request->payment_status);
@@ -867,6 +1063,54 @@ class PaymentController extends Controller
 
         // Get paginated results
         $payments = $query->paginate(10);
+
+        // Get cash payments
+        $cashQuery = \App\Models\CashPayment::where('user_id', $user->id);
+
+        // Apply search filter for cash payments
+        if ($request->has('search')) {
+            $search = $request->search;
+            $cashQuery->where('id', 'like', "%{$search}%");
+        }
+
+        // Apply payment method filter for cash payments
+        if ($request->has('payment_method') && $request->payment_method !== '') {
+            // Only show cash payments if CASH is selected
+            if ($request->payment_method !== 'CASH') {
+                $cashQuery->where('id', 0); // This will return no results
+            }
+        }
+
+        // Apply status filter for cash payments
+        if ($request->has('payment_status') && $request->payment_status !== '') {
+            $cashQuery->where('payment_status', $request->payment_status);
+        }
+
+        $cashPayments = $cashQuery->orderBy('created_at', 'desc')->paginate(5, ['*'], 'cash_page');
+
+        // Get GCash payments
+        $gcashQuery = \App\Models\GcashPayment::where('user_id', $user->id);
+
+        // Apply search filter for GCash payments
+        if ($request->has('search')) {
+            $search = $request->search;
+            $gcashQuery->where('id', 'like', "%{$search}%");
+        }
+
+        // Apply payment method filter for GCash payments
+        if ($request->has('payment_method') && $request->payment_method !== '') {
+            // Only show GCash payments if GCASH is selected
+            if ($request->payment_method !== 'GCASH') {
+                $gcashQuery->where('id', 0); // This will return no results
+            }
+        }
+
+        // Apply status filter for GCash payments
+        if ($request->has('payment_status') && $request->payment_status !== '') {
+            $gcashQuery->where('payment_status', $request->payment_status);
+        }
+
+        $gcashPayments = $gcashQuery->orderBy('created_at', 'desc')->paginate(5, ['*'], 'gcash_page');
 
         // Calculate statistics - using separate queries to avoid query builder issues
         $totalPayments = Order::where('user_id', $user->id)
@@ -883,7 +1127,37 @@ class PaymentController extends Controller
             ->where('payment_status', 'Pending')
             ->sum('total_price');
 
-        return view('payments.member', compact('payments', 'totalPayments', 'thisMonthPayments', 'pendingPayments'));
+        // Add cash payments statistics
+        $totalPayments += \App\Models\CashPayment::where('user_id', $user->id)
+            ->where('payment_status', 'Paid')
+            ->sum('total_price');
+
+        $thisMonthPayments += \App\Models\CashPayment::where('user_id', $user->id)
+            ->where('payment_status', 'Paid')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total_price');
+
+        $pendingPayments += \App\Models\CashPayment::where('user_id', $user->id)
+            ->where('payment_status', 'Pending')
+            ->sum('total_price');
+
+        // Add GCash payments statistics
+        $totalPayments += \App\Models\GcashPayment::where('user_id', $user->id)
+            ->where('payment_status', 'Paid')
+            ->sum('total_price');
+
+        $thisMonthPayments += \App\Models\GcashPayment::where('user_id', $user->id)
+            ->where('payment_status', 'Paid')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total_price');
+
+        $pendingPayments += \App\Models\GcashPayment::where('user_id', $user->id)
+            ->where('payment_status', 'Pending')
+            ->sum('total_price');
+
+        return view('payments.member', compact('payments', 'cashPayments', 'gcashPayments', 'totalPayments', 'thisMonthPayments', 'pendingPayments'));
     }
 
     /**
@@ -968,28 +1242,73 @@ class PaymentController extends Controller
                 $cashProofFile->move(public_path('proofs'), $cashProofPath);
             }
 
-            // Create the payment record
-            $payment = Order::create([
-                'user_id' => $user->id,
-                'method' => $validated['payment_method'],
-                'total_price' => $validated['total_price'],
-                'purpose' => $validated['purpose'],
-                'description' => $validated['description'] ?? null,
-                // GCash details
-                'gcash_name' => $validated['gcash_name'] ?? null,
-                'gcash_num' => $validated['gcash_num'] ?? null,
-                'gcash_amount' => $validated['gcash_amount'] ?? null,
-                'reference_number' => $validated['reference_number'] ?? null,
-                'gcash_proof_path' => $gcashProofPath,
-                // Cash details
-                'receipt_control_number' => $validated['receipt_control_number'] ?? null,
-                'cash_proof_path' => $cashProofPath,
-                'placed_on' => now()->format('Y-m-d H:i:s'),
-                'payment_status' => 'Pending' // Members can only submit pending payments
-            ]);
+            // Create the payment record based on payment method
+            if ($validated['payment_method'] === 'CASH') {
+                // Create a cash payment record
+                $payment = \App\Models\CashPayment::create([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'total_price' => $validated['total_price'],
+                    'purpose' => $validated['purpose'],
+                    'placed_on' => now(),
+                    'payment_status' => 'Pending', // Members can only submit pending payments
+                    'officer_in_charge' => $validated['officer_in_charge'] ?? null,
+                    'receipt_control_number' => $validated['receipt_control_number'] ?? null,
+                    'cash_proof_path' => $cashProofPath,
+                    'description' => $validated['description'] ?? null,
+                ]);
 
-            return redirect()->route('client.payments.index')
-                ->with('success', 'Payment #' . $payment->id . ' submitted successfully. It is pending approval from an administrator.');
+                \Log::info('Member cash payment created:', ['id' => $payment->id, 'user_id' => $user->id]);
+
+                return redirect()->route('client.payments.index')
+                    ->with('success', "Cash payment #{$payment->id} submitted successfully. It is pending approval from an administrator.");
+            }
+            else if ($validated['payment_method'] === 'GCASH') {
+                // Create a GCash payment record
+                $payment = \App\Models\GcashPayment::create([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'total_price' => $validated['total_price'],
+                    'purpose' => $validated['purpose'],
+                    'placed_on' => now(),
+                    'payment_status' => 'Pending', // Members can only submit pending payments
+                    'gcash_name' => $validated['gcash_name'] ?? null,
+                    'gcash_num' => $validated['gcash_num'] ?? null,
+                    'reference_number' => $validated['reference_number'] ?? null,
+                    'gcash_proof_path' => $gcashProofPath,
+                    'description' => $validated['description'] ?? null,
+                ]);
+
+                \Log::info('Member GCash payment created:', ['id' => $payment->id, 'user_id' => $user->id]);
+
+                return redirect()->route('client.payments.index')
+                    ->with('success', "GCash payment #{$payment->id} submitted successfully. It is pending approval from an administrator.");
+            }
+            else {
+                // Fallback to the original Order table if needed
+                $payment = Order::create([
+                    'user_id' => $user->id,
+                    'method' => $validated['payment_method'],
+                    'total_price' => $validated['total_price'],
+                    'purpose' => $validated['purpose'],
+                    'description' => $validated['description'] ?? null,
+                    // GCash details
+                    'gcash_name' => $validated['gcash_name'] ?? null,
+                    'gcash_num' => $validated['gcash_num'] ?? null,
+                    'reference_number' => $validated['reference_number'] ?? null,
+                    'gcash_proof_path' => $gcashProofPath,
+                    // Cash details
+                    'receipt_control_number' => $validated['receipt_control_number'] ?? null,
+                    'cash_proof_path' => $cashProofPath,
+                    'placed_on' => now()->format('Y-m-d H:i:s'),
+                    'payment_status' => 'Pending' // Members can only submit pending payments
+                ]);
+
+                \Log::info('Member payment created (fallback):', ['id' => $payment->id, 'user_id' => $user->id]);
+
+                return redirect()->route('client.payments.index')
+                    ->with('success', "Payment #{$payment->id} submitted successfully. It is pending approval from an administrator.");
+            }
 
         } catch (\Exception $e) {
             \Log::error('Member payment submission failed: ' . $e->getMessage());
@@ -1012,10 +1331,43 @@ class PaymentController extends Controller
                 ->with('error', 'Please use the admin payment edit form.');
         }
 
-        // Find the payment and ensure it belongs to the current user
-        $payment = Order::where('id', $id)
+        // Try to find the payment in different tables
+        $payment = null;
+        $paymentType = null;
+
+        // Check in CashPayment table
+        $cashPayment = \App\Models\CashPayment::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
+
+        if ($cashPayment) {
+            $payment = $cashPayment;
+            $paymentType = 'cash';
+        }
+
+        // Check in GcashPayment table if not found
+        if (!$payment) {
+            $gcashPayment = \App\Models\GcashPayment::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($gcashPayment) {
+                $payment = $gcashPayment;
+                $paymentType = 'gcash';
+            }
+        }
+
+        // Check in Order table if still not found
+        if (!$payment) {
+            $orderPayment = Order::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($orderPayment) {
+                $payment = $orderPayment;
+                $paymentType = 'order';
+            }
+        }
 
         if (!$payment) {
             return redirect()->route('client.payments.index')
@@ -1036,7 +1388,7 @@ class PaymentController extends Controller
             $user->suffix
         ])));
 
-        return view('payments.member-edit', compact('payment', 'user', 'memberName'));
+        return view('payments.member-edit', compact('payment', 'user', 'memberName', 'paymentType'));
     }
 
     /**
@@ -1052,10 +1404,43 @@ class PaymentController extends Controller
                 ->with('error', 'Please use the admin payment edit form.');
         }
 
-        // Find the payment and ensure it belongs to the current user
-        $payment = Order::where('id', $id)
+        // Try to find the payment in different tables
+        $payment = null;
+        $paymentType = null;
+
+        // Check in CashPayment table
+        $cashPayment = \App\Models\CashPayment::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
+
+        if ($cashPayment) {
+            $payment = $cashPayment;
+            $paymentType = 'cash';
+        }
+
+        // Check in GcashPayment table if not found
+        if (!$payment) {
+            $gcashPayment = \App\Models\GcashPayment::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($gcashPayment) {
+                $payment = $gcashPayment;
+                $paymentType = 'gcash';
+            }
+        }
+
+        // Check in Order table if still not found
+        if (!$payment) {
+            $orderPayment = Order::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($orderPayment) {
+                $payment = $orderPayment;
+                $paymentType = 'order';
+            }
+        }
 
         if (!$payment) {
             return redirect()->route('client.payments.index')
@@ -1077,13 +1462,12 @@ class PaymentController extends Controller
                 // GCASH specific fields
                 'gcash_name' => 'required_if:payment_method,GCASH|string|nullable',
                 'gcash_num' => 'required_if:payment_method,GCASH|string|nullable',
-                'gcash_amount' => 'required_if:payment_method,GCASH|numeric|min:0|nullable',
                 'reference_number' => 'required_if:payment_method,GCASH|string|nullable',
                 'gcash_proof_of_payment' => 'nullable|file|mimes:jpg,jpeg|max:2048',
                 // CASH specific fields
                 'officer_in_charge' => 'required_if:payment_method,CASH|string|nullable',
                 'receipt_control_number' => 'required_if:payment_method,CASH|integer|nullable',
-                'cash_proof_of_payment' => 'required_if:payment_method,CASH|file|mimes:jpg,jpeg|max:2048',
+                'cash_proof_of_payment' => 'nullable|file|mimes:jpg,jpeg|max:2048',
             ], [
                 'officer_in_charge.required_if' => 'The officer in charge field is required when payment method is CASH.',
                 'receipt_control_number.required_if' => 'The receipt control number field is required when payment method is CASH.',
@@ -1093,58 +1477,106 @@ class PaymentController extends Controller
                 'cash_proof_of_payment.mimes' => 'The proof of payment must be a JPG file.',
             ]);
 
-            // Validate that GCash amount is sufficient
-            if ($request->payment_method === 'GCASH' && isset($validated['gcash_amount'], $validated['total_price'])) {
-                if ($validated['gcash_amount'] < $validated['total_price']) {
-                    return redirect()->back()
-                        ->with('error', 'GCash amount must be greater than or equal to the total price.')
-                        ->withInput();
+            // Handle file uploads based on payment type
+            if ($paymentType === 'cash') {
+                $cashProofPath = $payment->cash_proof_path;
+
+                if ($request->hasFile('cash_proof_of_payment')) {
+                    $cashProofFile = $request->file('cash_proof_of_payment');
+                    $cashProofPath = 'proofs/cash_' . time() . '_' . $cashProofFile->getClientOriginalName();
+                    $cashProofFile->move(public_path('proofs'), $cashProofPath);
+
+                    // Delete old file if it exists
+                    if ($payment->cash_proof_path && file_exists(public_path($payment->cash_proof_path))) {
+                        unlink(public_path($payment->cash_proof_path));
+                    }
                 }
+
+                // Update the cash payment record
+                $payment->update([
+                    'total_price' => $validated['total_price'],
+                    'purpose' => $validated['purpose'],
+                    'officer_in_charge' => $validated['officer_in_charge'] ?? null,
+                    'receipt_control_number' => $validated['receipt_control_number'] ?? null,
+                    'cash_proof_path' => $cashProofPath,
+                    'description' => $validated['description'] ?? null,
+                ]);
+
+                \Log::info('Member cash payment updated:', ['id' => $payment->id, 'user_id' => $user->id]);
             }
+            else if ($paymentType === 'gcash') {
+                $gcashProofPath = $payment->gcash_proof_path;
 
-            // Handle file uploads
-            $gcashProofPath = $payment->gcash_proof_path;
-            $cashProofPath = $payment->cash_proof_path;
+                if ($request->hasFile('gcash_proof_of_payment')) {
+                    $gcashProofFile = $request->file('gcash_proof_of_payment');
+                    $gcashProofPath = 'proofs/gcash_' . time() . '_' . $gcashProofFile->getClientOriginalName();
+                    $gcashProofFile->move(public_path('proofs'), $gcashProofPath);
 
-            if ($request->hasFile('gcash_proof_of_payment') && $validated['payment_method'] === 'GCASH') {
-                $gcashProofFile = $request->file('gcash_proof_of_payment');
-                $gcashProofPath = 'proofs/gcash_' . time() . '_' . $gcashProofFile->getClientOriginalName();
-                $gcashProofFile->move(public_path('proofs'), $gcashProofPath);
-
-                // Delete old file if it exists
-                if ($payment->gcash_proof_path && file_exists(public_path($payment->gcash_proof_path))) {
-                    unlink(public_path($payment->gcash_proof_path));
+                    // Delete old file if it exists
+                    if ($payment->gcash_proof_path && file_exists(public_path($payment->gcash_proof_path))) {
+                        unlink(public_path($payment->gcash_proof_path));
+                    }
                 }
+
+                // Update the GCash payment record
+                $payment->update([
+                    'total_price' => $validated['total_price'],
+                    'purpose' => $validated['purpose'],
+                    'gcash_name' => $validated['gcash_name'] ?? null,
+                    'gcash_num' => $validated['gcash_num'] ?? null,
+                    'reference_number' => $validated['reference_number'] ?? null,
+                    'gcash_proof_path' => $gcashProofPath,
+                    'description' => $validated['description'] ?? null,
+                ]);
+
+                \Log::info('Member GCash payment updated:', ['id' => $payment->id, 'user_id' => $user->id]);
             }
+            else {
+                // Handle file uploads for Order table
+                $gcashProofPath = $payment->gcash_proof_path;
+                $cashProofPath = $payment->cash_proof_path;
 
-            if ($request->hasFile('cash_proof_of_payment') && $validated['payment_method'] === 'CASH') {
-                $cashProofFile = $request->file('cash_proof_of_payment');
-                $cashProofPath = 'proofs/cash_' . time() . '_' . $cashProofFile->getClientOriginalName();
-                $cashProofFile->move(public_path('proofs'), $cashProofPath);
+                if ($request->hasFile('gcash_proof_of_payment') && $validated['payment_method'] === 'GCASH') {
+                    $gcashProofFile = $request->file('gcash_proof_of_payment');
+                    $gcashProofPath = 'proofs/gcash_' . time() . '_' . $gcashProofFile->getClientOriginalName();
+                    $gcashProofFile->move(public_path('proofs'), $gcashProofPath);
 
-                // Delete old file if it exists
-                if ($payment->cash_proof_path && file_exists(public_path($payment->cash_proof_path))) {
-                    unlink(public_path($payment->cash_proof_path));
+                    // Delete old file if it exists
+                    if ($payment->gcash_proof_path && file_exists(public_path($payment->gcash_proof_path))) {
+                        unlink(public_path($payment->gcash_proof_path));
+                    }
                 }
-            }
 
-            // Update the payment record
-            $payment->update([
-                'method' => $validated['payment_method'],
-                'total_price' => $validated['total_price'],
-                'purpose' => $validated['purpose'],
-                'description' => $validated['description'] ?? null,
-                // GCash details
-                'gcash_name' => $validated['gcash_name'] ?? null,
-                'gcash_num' => $validated['gcash_num'] ?? null,
-                'gcash_amount' => $validated['gcash_amount'] ?? null,
-                'reference_number' => $validated['reference_number'] ?? null,
-                'gcash_proof_path' => $validated['payment_method'] === 'GCASH' ? $gcashProofPath : null,
-                // Cash details
-                'officer_in_charge' => $validated['officer_in_charge'] ?? null,
-                'receipt_control_number' => $validated['receipt_control_number'] ?? null,
-                'cash_proof_path' => $validated['payment_method'] === 'CASH' ? $cashProofPath : null,
-            ]);
+                if ($request->hasFile('cash_proof_of_payment') && $validated['payment_method'] === 'CASH') {
+                    $cashProofFile = $request->file('cash_proof_of_payment');
+                    $cashProofPath = 'proofs/cash_' . time() . '_' . $cashProofFile->getClientOriginalName();
+                    $cashProofFile->move(public_path('proofs'), $cashProofPath);
+
+                    // Delete old file if it exists
+                    if ($payment->cash_proof_path && file_exists(public_path($payment->cash_proof_path))) {
+                        unlink(public_path($payment->cash_proof_path));
+                    }
+                }
+
+                // Update the payment record in the Order table
+                $payment->update([
+                    'method' => $validated['payment_method'],
+                    'total_price' => $validated['total_price'],
+                    'purpose' => $validated['purpose'],
+                    'description' => $validated['description'] ?? null,
+                    // GCash details
+                    'gcash_name' => $validated['gcash_name'] ?? null,
+                    'gcash_num' => $validated['gcash_num'] ?? null,
+                    'reference_number' => $validated['reference_number'] ?? null,
+                    'gcash_proof_path' => $validated['payment_method'] === 'GCASH' ? $gcashProofPath : null,
+                    // Cash details
+                    'officer_in_charge' => $validated['officer_in_charge'] ?? null,
+                    'receipt_control_number' => $validated['receipt_control_number'] ?? null,
+                    'cash_proof_path' => $validated['payment_method'] === 'CASH' ? $cashProofPath : null,
+                ]);
+
+                \Log::info('Member payment updated (Order table):', ['id' => $payment->id, 'user_id' => $user->id]);
+            }
 
             return redirect()->route('client.payments.index')
                 ->with('success', 'Payment updated successfully. It is still pending approval from an administrator.');

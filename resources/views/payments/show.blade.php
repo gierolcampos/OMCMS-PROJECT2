@@ -47,8 +47,16 @@
                                 <p class="text-sm font-medium text-gray-500">Payment Method</p>
                                 <p class="mt-1">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                        {{ $payment->method === 'CASH' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800' }}">
-                                        {{ $payment->method }}
+                                        {{ isset($payment->method) && $payment->method === 'CASH' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800' }}">
+                                        @if(isset($payment->method))
+                                            {{ $payment->method }}
+                                        @elseif(get_class($payment) === 'App\Models\CashPayment')
+                                            CASH
+                                        @elseif(get_class($payment) === 'App\Models\GcashPayment')
+                                            GCASH
+                                        @else
+                                            Unknown
+                                        @endif
                                     </span>
                                 </p>
                             </div>
@@ -67,8 +75,10 @@
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Member</p>
                                 <p class="mt-1 text-sm text-gray-900">
-                                    @if($payment->user)
+                                    @if(isset($payment->user) && $payment->user)
                                         {{ $payment->user->firstname }} {{ $payment->user->lastname }}
+                                    @elseif(get_class($payment) === 'App\Models\NonIcsMember')
+                                        {{ $payment->fullname }} (Non-ICS)
                                     @else
                                         Guest
                                     @endif
@@ -92,24 +102,29 @@
                     </div>
 
                     <!-- Payment Method Specific Details -->
-                    @if($payment->method === 'GCASH')
+                    @php
+                        $isGcash = (isset($payment->method) && $payment->method === 'GCASH') || get_class($payment) === 'App\Models\GcashPayment';
+                        $isCash = (isset($payment->method) && $payment->method === 'CASH') || get_class($payment) === 'App\Models\CashPayment';
+                    @endphp
+
+                    @if($isGcash)
                     <div class="px-6 py-4 border-t border-gray-200">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">GCash Payment Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm font-medium text-gray-500">GCash Account Name</p>
-                                <p class="mt-1 text-sm text-gray-900">{{ $payment->gcash_name }}</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $payment->gcash_name ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-500">GCash Number</p>
-                                <p class="mt-1 text-sm text-gray-900">{{ $payment->gcash_num }}</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $payment->gcash_num ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-500">Reference Number</p>
-                                <p class="mt-1 text-sm text-gray-900">{{ $payment->reference_number }}</p>
+                                <p class="mt-1 text-sm text-gray-900">{{ $payment->reference_number ?? 'N/A' }}</p>
                             </div>
 
-                            @if($payment->gcash_proof_path)
+                            @if(isset($payment->gcash_proof_path) && $payment->gcash_proof_path)
                             <div class="md:col-span-2 mt-4">
                                 <p class="text-sm font-medium text-gray-500 mb-2">Proof of Payment</p>
                                 <div class="border border-gray-200 rounded-lg overflow-hidden">
@@ -126,7 +141,7 @@
                     </div>
                     @endif
 
-                    @if($payment->method === 'CASH')
+                    @if($isCash)
                     <div class="px-6 py-4 border-t border-gray-200">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Cash Payment Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -139,7 +154,7 @@
                                 <p class="mt-1 text-sm text-gray-900">{{ $payment->receipt_control_number ?? 'N/A' }}</p>
                             </div>
 
-                            @if($payment->cash_proof_path)
+                            @if(isset($payment->cash_proof_path) && $payment->cash_proof_path)
                             <div class="md:col-span-2 mt-4">
                                 <p class="text-sm font-medium text-gray-500 mb-2">Proof of Payment</p>
                                 <div class="border border-gray-200 rounded-lg overflow-hidden">
@@ -161,18 +176,40 @@
                 <div class="mt-6 flex justify-end space-x-3">
                     @if(Auth::user()->is_admin)
                         @if($payment->payment_status === 'Pending')
-                        <form action="{{ route('admin.payments.approve', $payment->id) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 transition">
-                                <i class="fas fa-check-circle mr-2"></i> Approve
-                            </button>
-                        </form>
-                        <form action="{{ route('admin.payments.reject', $payment->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reject this payment?');">
-                            @csrf
-                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 transition">
-                                <i class="fas fa-times-circle mr-2"></i> Reject
-                            </button>
-                        </form>
+                            @php
+                                $paymentClass = get_class($payment);
+                                $approveRoute = '';
+                                $rejectRoute = '';
+
+                                if ($paymentClass === 'App\Models\Order') {
+                                    $approveRoute = route('admin.payments.approve', $payment->id);
+                                    $rejectRoute = route('admin.payments.reject', $payment->id);
+                                } elseif ($paymentClass === 'App\Models\CashPayment') {
+                                    $approveRoute = route('payment.types.cash.approve', $payment->id);
+                                    $rejectRoute = route('payment.types.cash.reject', $payment->id);
+                                } elseif ($paymentClass === 'App\Models\GcashPayment') {
+                                    $approveRoute = route('payment.types.gcash.approve', $payment->id);
+                                    $rejectRoute = route('payment.types.gcash.reject', $payment->id);
+                                } elseif ($paymentClass === 'App\Models\NonIcsMember') {
+                                    $approveRoute = route('admin.payments.approve-non-ics', $payment->id);
+                                    $rejectRoute = route('admin.payments.reject-non-ics', $payment->id);
+                                }
+                            @endphp
+
+                            @if($approveRoute && $rejectRoute)
+                            <form action="{{ $approveRoute }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 transition">
+                                    <i class="fas fa-check-circle mr-2"></i> Approve
+                                </button>
+                            </form>
+                            <form action="{{ $rejectRoute }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reject this payment?');">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-[#c21313] hover:bg-red-800 transition">
+                                    <i class="fas fa-times-circle mr-2"></i> Reject
+                                </button>
+                            </form>
+                            @endif
                         @endif
                     @endif
                 </div>

@@ -87,7 +87,7 @@
                 <!-- Search & Filter -->
                 <div class="mb-6 bg-gray-50 p-5 rounded-xl shadow-sm border border-gray-100">
                     <form method="GET" action="{{ route('client.payments.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="md:col-span-2">
+                        <div>
                             <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -95,6 +95,14 @@
                                 </div>
                                 <input type="text" name="search" id="search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Search by transaction ID..." value="{{ request('search') }}">
                             </div>
+                        </div>
+                        <div>
+                            <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                            <select id="payment_method" name="payment_method" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg shadow-sm">
+                                <option value="">All Methods</option>
+                                <option value="CASH" {{ request('payment_method') == 'CASH' ? 'selected' : '' }}>Cash</option>
+                                <option value="GCASH" {{ request('payment_method') == 'GCASH' ? 'selected' : '' }}>GCash</option>
+                            </select>
                         </div>
                         <div>
                             <label for="payment_status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -130,7 +138,11 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
+                            @php $hasPayments = false; @endphp
+
+                            <!-- Original payments from Order table -->
                             @forelse($payments as $payment)
+                                @php $hasPayments = true; @endphp
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         #{{ $payment->id }}
@@ -164,11 +176,94 @@
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             @endif
-                                            <!-- GCash receipt link removed -->
                                         </div>
                                     </td>
                                 </tr>
                             @empty
+                                @php $hasPayments = false; @endphp
+                            @endforelse
+
+                            <!-- Cash payments from cash_payments table -->
+                            @foreach($cashPayments as $payment)
+                                @php $hasPayments = true; @endphp
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        #{{ $payment->id }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        ₱{{ number_format($payment->total_price, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                            CASH
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ \Carbon\Carbon::parse($payment->placed_on)->format('M d, Y h:i A') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                                               ($payment->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                            {{ $payment->payment_status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2">
+                                            <a href="{{ route('client.cash-payments.show', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($payment->payment_status === 'Pending')
+                                                <a href="{{ route('client.cash-payments.edit', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="Edit Payment">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                            <!-- GCash payments from gcash_payments table -->
+                            @foreach($gcashPayments as $payment)
+                                @php $hasPayments = true; @endphp
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        #{{ $payment->id }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        ₱{{ number_format($payment->total_price, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            GCASH
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ \Carbon\Carbon::parse($payment->placed_on)->format('M d, Y h:i A') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                                               ($payment->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                            {{ $payment->payment_status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2">
+                                            <a href="{{ route('client.gcash-payments.show', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($payment->payment_status === 'Pending')
+                                                <a href="{{ route('client.gcash-payments.edit', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="Edit Payment">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                            @if(!$hasPayments)
                             <tr>
                                 <td colspan="6" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center text-gray-500">
@@ -180,7 +275,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -188,15 +283,33 @@
                 <!-- Pagination -->
                 <div class="mt-6 flex flex-col sm:flex-row items-center justify-between">
                     <div class="text-sm text-gray-700 font-medium mb-4 sm:mb-0">
-                        @if($payments->total() > 0)
-                            Showing <span class="font-bold text-indigo-600">{{ $payments->firstItem() }}</span>
-                            to <span class="font-bold text-indigo-600">{{ $payments->lastItem() }}</span>
-                            of <span class="font-bold text-indigo-600">{{ $payments->total() }}</span> payments
+                        @php
+                            $totalCount = $payments->total() + $cashPayments->total() + $gcashPayments->total();
+                            $firstItem = min(
+                                $payments->isEmpty() ? PHP_INT_MAX : $payments->firstItem(),
+                                $cashPayments->isEmpty() ? PHP_INT_MAX : $cashPayments->firstItem(),
+                                $gcashPayments->isEmpty() ? PHP_INT_MAX : $gcashPayments->firstItem()
+                            );
+                            $firstItem = $firstItem === PHP_INT_MAX ? 0 : $firstItem;
+
+                            $lastItem = max(
+                                $payments->isEmpty() ? 0 : $payments->lastItem(),
+                                $cashPayments->isEmpty() ? 0 : $cashPayments->lastItem(),
+                                $gcashPayments->isEmpty() ? 0 : $gcashPayments->lastItem()
+                            );
+                        @endphp
+
+                        @if($totalCount > 0)
+                            Showing <span class="font-bold text-indigo-600">{{ $firstItem }}</span>
+                            to <span class="font-bold text-indigo-600">{{ $lastItem }}</span>
+                            of <span class="font-bold text-indigo-600">{{ $totalCount }}</span> payments
                         @else
                             No payments found
                         @endif
                     </div>
-                    {{ $payments->links() }}
+                    <div class="flex space-x-4">
+                        {{ $payments->appends(['cash_page' => $cashPayments->currentPage(), 'gcash_page' => $gcashPayments->currentPage()])->links() }}
+                    </div>
                 </div>
             </div>
         </div>

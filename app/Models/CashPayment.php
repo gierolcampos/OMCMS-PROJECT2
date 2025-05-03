@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class NonIcsMember extends Model
+class CashPayment extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -16,23 +16,16 @@ class NonIcsMember extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'user_id',
         'email',
-        'fullname',
-        'course_year_section',
-        'mobile_no',
-        'method',
         'total_price',
         'purpose',
-        'description',
-        'payment_status',
         'placed_on',
+        'payment_status',
         'officer_in_charge',
         'receipt_control_number',
         'cash_proof_path',
-        'gcash_name',
-        'gcash_num',
-        'reference_number',
-        'gcash_proof_path',
+        'description',
     ];
 
     /**
@@ -43,30 +36,16 @@ class NonIcsMember extends Model
     protected $casts = [
         'placed_on' => 'datetime',
         'total_price' => 'decimal:2',
-        'payment_status' => 'string',
-        'method' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
+     * Get the user that made the payment.
      */
-    protected $dates = [
-        'placed_on',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
-
-    /**
-     * Get the orders associated with the non-ICS member.
-     */
-    public function orders()
+    public function user()
     {
-        return $this->hasMany(Order::class, 'non_ics_member_id', 'id');
+        return $this->belongsTo(User::class);
     }
 }

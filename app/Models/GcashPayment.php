@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class NonIcsMember extends Model
+class GcashPayment extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -16,23 +16,17 @@ class NonIcsMember extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'user_id',
         'email',
-        'fullname',
-        'course_year_section',
-        'mobile_no',
-        'method',
         'total_price',
         'purpose',
-        'description',
-        'payment_status',
         'placed_on',
-        'officer_in_charge',
-        'receipt_control_number',
-        'cash_proof_path',
+        'payment_status',
         'gcash_name',
         'gcash_num',
         'reference_number',
         'gcash_proof_path',
+        'description',
     ];
 
     /**
@@ -43,30 +37,42 @@ class NonIcsMember extends Model
     protected $casts = [
         'placed_on' => 'datetime',
         'total_price' => 'decimal:2',
-        'payment_status' => 'string',
-        'method' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
+     * Get the user that made the payment.
      */
-    protected $dates = [
-        'placed_on',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
-     * Get the orders associated with the non-ICS member.
+     * Get masked name for GCASH receipts.
      */
-    public function orders()
+    public function getMaskedNameAttribute()
     {
-        return $this->hasMany(Order::class, 'non_ics_member_id', 'id');
+        $gcashName = $this->gcash_name;
+
+        if (!$gcashName) {
+            return '';
+        }
+
+        $maskedName = '';
+        $nameParts = explode(' ', $gcashName);
+
+        foreach ($nameParts as $part) {
+            if (strlen($part) > 2) {
+                $maskedPart = substr($part, 0, 1) . str_repeat('*', strlen($part) - 2) . substr($part, -1);
+            } else {
+                $maskedPart = $part;
+            }
+            $maskedName .= $maskedPart . ' ';
+        }
+
+        return trim($maskedName);
     }
 }

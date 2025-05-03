@@ -171,6 +171,8 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @php $hasIcsMembers = false; @endphp
+
+                            <!-- Original payments from Order table -->
                             @forelse($payments as $payment)
                                 @if(!$payment->is_non_ics_member && $payment->user)
                                     @php $hasIcsMembers = true; @endphp
@@ -213,14 +215,14 @@
                                                 @if($payment->payment_status === 'Pending')
                                                     <form method="POST" action="{{ route('admin.payments.approve', $payment->id) }}" class="inline">
                                                         @csrf
-                                                        <button type="submit" class="text-green-600 hover:text-green-900" title="Approve Payment">
-                                                            <i class="fas fa-check"></i>
+                                                        <button type="submit" class="text-green-600 hover:text-green-800" title="Approve Payment">
+                                                            <i class="fas fa-check-circle"></i>
                                                         </button>
                                                     </form>
-                                                    <form method="POST" action="{{ route('admin.payments.reject', $payment->id) }}" class="inline">
+                                                    <form method="POST" action="{{ route('admin.payments.reject', $payment->id) }}" class="inline" onsubmit="return confirm('Are you sure you want to reject this payment?');">
                                                         @csrf
-                                                        <button type="submit" class="text-[#c21313] hover:text-red-800" title="Reject Payment">
-                                                            <i class="fas fa-times"></i>
+                                                        <button type="submit" class="text-red-600 hover:text-red-800" title="Reject Payment">
+                                                            <i class="fas fa-times-circle"></i>
                                                         </button>
                                                     </form>
                                                 @endif
@@ -232,7 +234,121 @@
                                 @php $hasIcsMembers = false; @endphp
                             @endforelse
 
-                            @if(!$hasIcsMembers)
+                            <!-- Cash payments from cash_payments table -->
+                            @foreach($cashPayments as $payment)
+                                @php $hasIcsMembers = true; @endphp
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        #{{ $payment->id }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <div class="flex items-center">
+                                            <div>
+                                                <div class="font-medium text-gray-900">{{ optional($payment->user)->firstname }} {{ optional($payment->user)->lastname }}</div>
+                                                <div class="text-gray-500">{{ $payment->email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        ₱{{ number_format($payment->total_price, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                            CASH
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ \Carbon\Carbon::parse($payment->placed_on)->format('M d, Y h:i A') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                                               ($payment->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                            {{ $payment->payment_status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2">
+                                            <a href="{{ route('admin.payment-types.cash.show', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($payment->payment_status === 'Pending')
+                                                <form action="{{ route('payment.types.cash.approve', $payment->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Approve Payment">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('payment.types.cash.reject', $payment->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reject this payment?');">
+                                                    @csrf
+                                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Reject Payment">
+                                                        <i class="fas fa-times-circle"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                            <!-- GCash payments from gcash_payments table -->
+                            @foreach($gcashPayments as $payment)
+                                @php $hasIcsMembers = true; @endphp
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        #{{ $payment->id }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <div class="flex items-center">
+                                            <div>
+                                                <div class="font-medium text-gray-900">{{ optional($payment->user)->firstname }} {{ optional($payment->user)->lastname }}</div>
+                                                <div class="text-gray-500">{{ $payment->email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        ₱{{ number_format($payment->total_price, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            GCASH
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ \Carbon\Carbon::parse($payment->placed_on)->format('M d, Y h:i A') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {{ $payment->payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                                               ($payment->payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                            {{ $payment->payment_status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2">
+                                            <a href="{{ route('admin.payment-types.gcash.show', $payment->id) }}" class="text-[#c21313] hover:text-red-800" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($payment->payment_status === 'Pending')
+                                                <form action="{{ route('payment.types.gcash.approve', $payment->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Approve Payment">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('payment.types.gcash.reject', $payment->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reject this payment?');">
+                                                    @csrf
+                                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Reject Payment">
+                                                        <i class="fas fa-times-circle"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                            @if(!$hasIcsMembers && $payments->isEmpty() && $cashPayments->isEmpty() && $gcashPayments->isEmpty())
                                 <tr>
                                     <td colspan="7" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center justify-center text-gray-500">
@@ -313,14 +429,14 @@
                                             @if($member->payment_status === 'Pending')
                                                 <form method="POST" action="{{ route('admin.payments.approve-non-ics', $member->id) }}" class="inline">
                                                     @csrf
-                                                    <button type="submit" class="text-green-600 hover:text-green-900" title="Approve Payment">
-                                                        <i class="fas fa-check"></i>
+                                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Approve Payment">
+                                                        <i class="fas fa-check-circle"></i>
                                                     </button>
                                                 </form>
-                                                <form method="POST" action="{{ route('admin.payments.reject-non-ics', $member->id) }}" class="inline">
+                                                <form method="POST" action="{{ route('admin.payments.reject-non-ics', $member->id) }}" class="inline" onsubmit="return confirm('Are you sure you want to reject this payment?');">
                                                     @csrf
-                                                    <button type="submit" class="text-[#c21313] hover:text-red-800" title="Reject Payment">
-                                                        <i class="fas fa-times"></i>
+                                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Reject Payment">
+                                                        <i class="fas fa-times-circle"></i>
                                                     </button>
                                                 </form>
                                             @endif
@@ -381,6 +497,8 @@
                             document.getElementById('tab-non-ics-members').classList.add('border-indigo-500', 'text-indigo-600');
                         }
                     }
+
+
                 </script>
 
                 <!-- Pagination -->
