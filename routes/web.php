@@ -6,12 +6,14 @@ use App\Http\Controllers\AboutUsController;
 use App\Http\Controllers\NonIcsMemberController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\LetterController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    return Auth::check() ? redirect()->route('home.index') : redirect()->route('login');
+    return Auth::check() ? redirect()->route('home.index') : redirect()->route('home.index');
 });
+
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -21,6 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Events routes
     Route::get('/events', [App\Http\Controllers\EventController::class, 'index'])->name('events.index');
     Route::get('/events/calendar', [App\Http\Controllers\EventController::class, 'calendar'])->name('events.calendar');
+    Route::get('/events/custom-calendar', [App\Http\Controllers\EventController::class, 'customCalendar'])->name('events.custom-calendar');
+    Route::get('/events/upd-calendar', [App\Http\Controllers\EventController::class, 'updCalendar'])->name('events.upd-calendar');
     Route::get('/events/export/ical', [App\Http\Controllers\EventController::class, 'exportIcal'])->name('events.export.ical');
     Route::resource('events', App\Http\Controllers\EventController::class)->except(['index']);
 
@@ -63,6 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{id}', [PaymentController::class, 'memberUpdate'])->name('client.payments.update');
     });
 
+
 });
 
 
@@ -87,18 +92,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
     Route::delete('/members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
     Route::patch('/members/{member}/status', [MemberController::class, 'updateStatus'])->name('members.updateStatus');
-
-    // Add routes for export and import members
-    Route::get('/members-export', [MemberController::class, 'export'])->name('members.export');
-    Route::get('/members-import', [MemberController::class, 'showImportForm'])->name('members.showImport');
-    Route::post('/members-import', [MemberController::class, 'import'])->name('members.import');
+    Route::patch('/members/{member}/role', [MemberController::class, 'updateRole'])->name('members.updateRole');
 
     Route::get('/admin-members', [MemberController::class, 'index'])->name('admin.members.index');
 
      // Letters routes
-    Route::get('/letters', function () {
-        return view('letters.index');
-    })->name('letters');
+    Route::get('/letters', [LetterController::class, 'index'])->name('admin.letters.index');
+    Route::get('/letters/create', [LetterController::class, 'create'])->name('admin.letters.create');
+    Route::post('/letters', [LetterController::class, 'store'])->name('admin.letters.store');
+    Route::get('/letters/{letter}', [LetterController::class, 'show'])->name('admin.letters.show');
+    Route::get('/letters/{letter}/edit', [LetterController::class, 'edit'])->name('admin.letters.edit');
+    Route::put('/letters/{letter}', [LetterController::class, 'update'])->name('admin.letters.update');
+    Route::delete('/letters/{letter}', [LetterController::class, 'destroy'])->name('admin.letters.destroy');
 
     // Admin Payment Routes
     Route::prefix('payments')->group(function () {
@@ -130,6 +135,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{id}/edit', [NonIcsMemberController::class, 'edit'])->name('admin.non-ics-members.edit');
         Route::put('/{id}', [NonIcsMemberController::class, 'update'])->name('admin.non-ics-members.update');
         Route::delete('/{id}', [NonIcsMemberController::class, 'destroy'])->name('admin.non-ics-members.destroy');
+
+
     });
 });
 

@@ -14,6 +14,12 @@
                     </svg>
                     Calendar View
                 </a>
+                <a href="{{ route('events.custom-calendar') }}" class="border border-[#c21313] hover:bg-[#c21313] hover:text-white px-6 py-2 text-sm rounded-lg transition duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h8V3a1 1 0 112 0v1h1a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 011-1zm11 14V8H4v8h12z" clip-rule="evenodd" />
+                    </svg>
+                    Custom Calendar
+                </a>
                 <a href="{{ route('events.export.ical') }}" class="border border-[#c21313] hover:bg-[#c21313] hover:text-white px-6 py-2 text-sm rounded-lg transition duration-300 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -30,13 +36,13 @@
                 @endif
             </div>
         </div>
-        
+
         <!-- Search and filters -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
             <form action="{{ route('events.index') }}" method="GET" class="p-4">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div class="relative flex-1">
-                        <input type="text" name="search" id="search" placeholder="Search by event name, location..." value="{{ request('search') }}" 
+                        <input type="text" name="search" id="search" placeholder="Search by event name, location..." value="{{ request('search') }}"
                             class="pl-10 pr-4 py-2.5 w-full bg-gray-50 border-none rounded-md focus:ring-2 focus:ring-gray-200 focus:bg-white transition-all duration-200">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -59,7 +65,7 @@
                 </div>
             </form>
         </div>
-        
+
         <!-- Display success message if any -->
         @if(session('success'))
         <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
@@ -75,7 +81,7 @@
             </div>
         </div>
         @endif
-        
+
         <!-- Events Table -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
@@ -118,8 +124,8 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ isset($event->start_date_time) ? $event->start_date_time->format('M d, Y') : 'Date not set' }}</div>
                                 <div class="text-xs text-gray-500">
-                                    {{ isset($event->start_date_time) ? $event->start_date_time->format('g:i A') : '' }} 
-                                    {{ isset($event->start_date_time) && isset($event->end_date_time) ? '-' : '' }} 
+                                    {{ isset($event->start_date_time) ? $event->start_date_time->format('g:i A') : '' }}
+                                    {{ isset($event->start_date_time) && isset($event->end_date_time) ? '-' : '' }}
                                     {{ isset($event->end_date_time) ? $event->end_date_time->format('g:i A') : '' }}
                                 </div>
                             </td>
@@ -190,7 +196,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Pagination -->
             @if(isset($events) && $events->count() > 0)
             <div class="px-6 py-3 bg-white border-t border-gray-200">
@@ -201,7 +207,7 @@
                                 Showing <span class="font-medium">{{ $events->firstItem() }}</span> to <span class="font-medium">{{ $events->lastItem() }}</span> of <span class="font-medium">{{ $events->total() }}</span> events
                             </p>
                         </div>
-                        
+
                         <div>
                             {{ $events->links('pagination::tailwind') }}
                         </div>
@@ -222,4 +228,4 @@
         animation: fadeIn 0.5s ease-out forwards;
     }
 </style>
-@endsection 
+@endsection

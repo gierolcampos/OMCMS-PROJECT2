@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
 
 class MemberController extends Controller
 {
@@ -15,8 +14,11 @@ class MemberController extends Controller
      */
     public function index(Request $request)
     {
-        // Base query
-        $query = User::where('is_admin', 0);
+        // Check if user is admin
+        $isAdmin = auth()->user()->is_admin;
+
+        // Base query - for admin show all users, for regular users show only non-admin users
+        $query = $isAdmin ? User::query() : User::where('is_admin', 0);
 
         // Apply search filter
         if ($request->has('search')) {
@@ -29,15 +31,55 @@ class MemberController extends Controller
             });
         }
 
+        // Admin-specific filters
+        if ($isAdmin) {
+            // Apply role filter
+            if ($request->has('role') && $request->role !== '') {
+                $roleIsAdmin = $request->role === 'admin' ? 1 : 0;
+                $query->where('is_admin', $roleIsAdmin);
+            }
+
+            // Apply status filter
+            if ($request->has('status') && $request->status !== '') {
+                $query->where('status', $request->status);
+            }
+        }
+
         // Get paginated results
         $members = $query->orderBy('created_at', 'desc')->paginate(10);
 
         // Calculate statistics
-        $totalMembers = User::where('is_admin', 0)->count();
-        $verifiedMembers = User::where('is_admin', 0)->whereNotNull('email_verified_at')->count();
-        $unverifiedMembers = User::where('is_admin', 0)->whereNull('email_verified_at')->count();
+        if ($isAdmin) {
+            // Admin statistics
+            $totalUsers = User::count();
+            $totalAdmins = User::where('is_admin', 1)->count();
+            $totalMembers = User::where('is_admin', 0)->count();
+            $activeUsers = User::where('status', 'active')->count();
+            $inactiveUsers = User::where('status', 'inactive')->count();
 
-        return view('members.index', compact('members', 'totalMembers', 'verifiedMembers', 'unverifiedMembers'));
+            return view('members.index', compact(
+                'members',
+                'isAdmin',
+                'totalUsers',
+                'totalAdmins',
+                'totalMembers',
+                'activeUsers',
+                'inactiveUsers'
+            ));
+        } else {
+            // Regular user statistics
+            $totalMembers = User::where('is_admin', 0)->count();
+            $verifiedMembers = User::where('is_admin', 0)->whereNotNull('email_verified_at')->count();
+            $unverifiedMembers = User::where('is_admin', 0)->whereNull('email_verified_at')->count();
+
+            return view('members.index', compact(
+                'members',
+                'isAdmin',
+                'totalMembers',
+                'verifiedMembers',
+                'unverifiedMembers'
+            ));
+        }
     }
 
     /**
@@ -165,48 +207,7 @@ class MemberController extends Controller
         }
     }
 
-    /**
-     * Export members to Excel.
-     */
-    public function export()
-    {
-        try {
-            return Excel::download(new \App\Exports\MembersExport, 'members.xlsx');
-        } catch (\Exception $e) {
-            Log::error('Failed to export members: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Failed to export members: ' . $e->getMessage());
-        }
-    }
 
-    /**
-     * Show the form for importing members.
-     */
-    public function showImportForm()
-    {
-        return view('members.import');
-    }
-
-    /**
-     * Import members from Excel.
-     */
-    public function import(Request $request)
-    {
-        try {
-            $request->validate([
-                'file' => 'required|file|mimes:xlsx,xls,csv',
-            ]);
-
-            Excel::import(new \App\Imports\MembersImport, $request->file('file'));
-
-            return redirect()->route('members.index')
-                ->with('success', 'Members imported successfully.');
-        } catch (\Exception $e) {
-            Log::error('Failed to import members: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Failed to import members: ' . $e->getMessage());
-        }
-    }
 
     /**
      * Update the status of a member.
@@ -224,6 +225,25 @@ class MemberController extends Controller
             Log::error('Failed to update member status: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Failed to update member status: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the role of a member.
+     */
+    public function updateRole($id, Request $request)
+    {
+        try {
+            $member = User::findOrFail($id);
+            $member->is_admin = $request->role === 'admin' ? 1 : 0;
+            $member->save();
+
+            return redirect()->back()
+                ->with('success', 'Member role updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to update member role: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update member role: ' . $e->getMessage());
         }
     }
 }

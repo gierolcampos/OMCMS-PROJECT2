@@ -1,0 +1,437 @@
+/* Custom dropdown styling */
+.table-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+        .dropdown-button {
+            background-color: white;
+            color: #000000;
+            padding: 0.5rem 2rem 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            min-width: 110px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            display: inline-block;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Different button colors based on role/status */
+        .dropdown-button.admin {
+            color: #000000;
+        }
+
+        .dropdown-button.member {
+            color: #000000;
+        }
+
+        .dropdown-button.active {
+            color: #000000;
+        }
+
+        .dropdown-button.inactive {
+            color: #000000;
+        }
+
+        .dropdown-button::after {
+            content: "";
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.75rem;
+            height: 0.75rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+
+        .dropdown-button.admin::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 110px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            margin-top: 0.25rem;
+        }
+
+        .dropdown-content a {
+            color: #1e293b;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.875rem;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-content a.active-option,
+        .dropdown-content a.inactive-option,
+        .dropdown-content a.admin-option,
+        .dropdown-content a.member-option {
+            background-color: white;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #c21313;
+            color: white;
+        }
+
+        .dropdown-button:hover {
+            background-color: #f8fafc;
+        }
+
+        .table-dropdown.show .dropdown-content {
+            display: block;
+        }
+
+        /* Only hide elements with the hidden class that are within the admin container */
+        .admin-container .hidden:not(.sm\:flex):not(.sm\:flex.sm\:items-center) {
+            display: none;
+        }
+
+        /* Legacy status select styles for compatibility */
+        .status-select {
+            background-color: white;
+            color: #6366f1;
+            padding: 0.5rem 2.25rem 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            min-width: 110px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-select.active-selected {
+            color: #6366f1;
+        }
+
+        .status-select.inactive-selected {
+            color: #6366f1;
+        }
+
+        /* Role dropdown styles - already handled in the general dropdown styles */
+
+        /* Legacy role select styles for compatibility */
+        .role-select {
+            background-color: white;
+            color: #6366f1;
+            padding: 0.5rem 2.25rem 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            min-width: 110px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .role-select.admin-selected {
+            color: #8b5cf6;
+        }
+
+        .role-select.member-selected {
+            color: #6366f1;
+        }
+
+        /* Professional Admin UI styles */
+        /* Ensure navigation is visible */
+        .sm\:flex {
+            display: flex !important;
+        }
+
+        body {
+            background-color: #f5f7fa;
+        }
+
+        .admin-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .admin-header {
+            background-color: #fff;
+            color: #1e293b;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-stat-card {
+            color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(253, 253, 253, 0.1);
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .admin-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-stat-label {
+            font-size: 0.875rem;
+            color: rgba(0, 0, 0, 0.7);
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: rgb(0, 0, 0);
+        }
+
+        .admin-stat-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Card and icon colors */
+        .admin-stat-card.blue {
+            background-color: #ffffff;
+        }
+
+        .admin-stat-icon-blue {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .admin-stat-card.purple {
+            background-color: #ffffff;
+        }
+
+        .admin-stat-icon-purple {
+            background-color: rgba(139, 92, 246, 0.2);
+        }
+
+        .admin-stat-card.green {
+            background-color: #ffffff
+        }
+
+        .admin-stat-icon-green {
+            background-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .admin-stat-card.red {
+            background-color: #ffffff;
+        }
+
+        .admin-stat-icon-red {
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .admin-search-bar {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .admin-search-input {
+            flex: 1;
+            min-width: 200px;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            color: #1e293b;
+            background-color: #f8fafc;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 0.75rem center;
+            background-size: 1rem;
+            padding-left: 2.5rem;
+        }
+
+        .admin-search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .admin-filter-button {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .admin-filter-button:hover {
+            background-color: #b91c1c;
+        }
+
+        .admin-select {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.5rem 2rem 0.5rem 1rem;
+            font-size: 0.875rem;
+            color: #1e293b;
+            background-color: #f8fafc;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1rem;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .admin-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .admin-table-container {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .admin-table tr {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .admin-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .admin-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .admin-table td {
+            padding: 1rem;
+            color: #1e293b;
+            font-size: 0.875rem;
+        }
+
+        .admin-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            background-color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .admin-user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .admin-user-details {
+            margin-left: 0.75rem;
+        }
+
+        .admin-user-name {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-user-email {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .admin-action-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.2s;
+            padding: 0.25rem;
+        }
+
+        .admin-action-button:hover {
+            color: #1e293b;
+        }
+
+        .admin-action-button.view:hover {
+            color: #3b82f6;
+        }
+
+        .admin-action-button.edit:hover {
+            color: #10b981;
+        }
+
+        .admin-action-button.delete:hover {
+            color: #ef4444;
+        }

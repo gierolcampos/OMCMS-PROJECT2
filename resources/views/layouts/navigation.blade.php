@@ -118,7 +118,7 @@
                 @endif
 
                 @if(Auth::user()->is_admin)
-                    <x-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
+                    <x-nav-link :href="route('admin.letters.index')" :active="request()->routeIs('admin.letters.*')">
                         {{ __('Letters') }}
                     </x-nav-link>
                 @endif
@@ -220,11 +220,13 @@
                     {{ __('Payments') }}
                 </x-responsive-nav-link>
             @endif
+
             @if(Auth::user()->is_admin)
-                <x-responsive-nav-link :href="route('letters')" :active="request()->routeIs('letters')">
+                <x-responsive-nav-link :href="route('admin.letters.index')" :active="request()->routeIs('admin.letters.*')">
                     {{ __('Letters') }}
                 </x-responsive-nav-link>
             @endif
+
             <x-responsive-nav-link :href="route('aboutus')" :active="request()->routeIs('aboutus')">
                 {{ __('About Us') }}
             </x-responsive-nav-link>

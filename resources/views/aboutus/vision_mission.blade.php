@@ -1,9 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Vision and Mission') }}
-        </h2>
-    </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -19,27 +14,28 @@
                         <div class="p-6 text-gray-900">
                             <div class="prose max-w-none">
                                 <div class="mb-8">
-                                    <h3 class="text-2xl font-bold mb-4">Vision</h3>
+                                    <h3 class="text-2xl text-[#c21313] font-bold mb-4">Vision</h3>
                                     <p class="mb-4">
-                                        The Institute of Computer Studies envisions itself as a leading center of excellence in computer education, research, and technology innovation in the Philippines.
+                                        To create a lively and thriving organization where each AIS student can expose their unique talent and skills in computer-related skills, feel valued, empowered, and inspired to achieve greatness. We strive to help students inculcate the essential virtues and attitudes, as well as develop necessary knowledge and competency levels required of an information systems professional.
                                     </p>
                                 </div>
 
                                 <div class="mb-8">
-                                    <h3 class="text-2xl font-bold mb-4">Mission</h3>
+                                    <h3 class="text-2xl text-[#c21313] font-bold mb-4">Mission</h3>
                                     <p class="mb-4">
-                                        To provide quality education and training in computer studies that will produce competent and ethical IT professionals who will contribute to the development of the nation.
+                                        The ICS organization is committed to foster a supportive and inclusive environment where AIS students can excel academically and personally. We are dedicated to providing resources, opportunities, experiences, and guidance to help every AIS student know their goal and reach their full potential.
+
                                     </p>
                                 </div>
 
                                 <div>
-                                    <h3 class="text-2xl font-bold mb-4">Core Values</h3>
+                                    <h3 class="text-2xl text-[#c21313] font-bold mb-4">Core Values</h3>
                                     <ul class="list-disc pl-6 space-y-2">
-                                        <li>Excellence in Teaching and Learning</li>
-                                        <li>Innovation and Creativity</li>
-                                        <li>Professional Ethics and Integrity</li>
+                                        <li>Innovation and Collaboration</li>
+                                        <li>Excellence and Integrity</li>
+                                        <li>Inclusivity</li>
+                                        <li>Leadership</li>
                                         <li>Social Responsibility</li>
-                                        <li>Continuous Improvement</li>
                                     </ul>
                                 </div>
                             </div>

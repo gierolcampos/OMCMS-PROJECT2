@@ -69,8 +69,8 @@
                 <p class="text-gray-400">
                     Organization Management and Club Management System (OMCMS) is dedicated to streamlining organizational processes and enhancing communication within the ICS community.
                 </p>
-                <div class="mt-4 flex space-x-3">
-                    <a href="https://facebook.com" target="_blank" class="footer-social" aria-label="Facebook">
+                <div class="mt-4 flex">
+                    <a href="https://www.facebook.com/npc.ics.organization" target="_blank" class="footer-social" aria-label="Facebook">
                         <i class="fab fa-facebook-f"></i>
                     </a>
                     <a href="https://twitter.com" target="_blank" class="footer-social" aria-label="Twitter">
@@ -96,8 +96,12 @@
                         <a href="{{ url('/payments') }}" class="footer-link">Payments</a>
                     </div>
                     <div>
+                        @if(Auth::user()->is_admin)
                         <a href="{{ url('/members') }}" class="footer-link">Members</a>
+                        @endif
+                        @if(Auth::user()->is_admin)
                         <a href="{{ url('/letters') }}" class="footer-link">Letters</a>
+                        @endif
                         <a href="{{ url('/aboutus') }}" class="footer-link">About Us</a>
                     </div>
                 </div>

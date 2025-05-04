@@ -15,7 +15,7 @@
         </a>
         <a href="{{ route('about_us.logo_symbolism') }}" 
            class="block px-3 py-2 text-sm {{ request()->routeIs('about_us.logo_symbolism') ? 'text-[#c21313] font-medium' : 'text-gray-700 hover:text-[#c21313]' }} transition-colors">
-            Logo and Symbols
+            Logo Symbolism
         </a>
         <a href="{{ route('about_us.student_leaders') }}" 
            class="block px-3 py-2 text-sm {{ request()->routeIs('about_us.student_leaders') ? 'text-[#c21313] font-medium' : 'text-gray-700 hover:text-[#c21313]' }} transition-colors">
